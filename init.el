@@ -8,7 +8,6 @@
 (package-initialize)
 
 ;; Turn off mouse interface early in startup to avoid momentary display
-(menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
@@ -48,67 +47,40 @@
 ;; show-paren-mode highlights the matching pair when the point is over parentheses.
 (show-paren-mode 1)
 
-;; set font
-(set-default-font "12")
-(set-face-attribute 'default nil :font "Ubuntu Mono-12")
+;; web development
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
 
-;; Python IDE
-;;(add-hook 'after-init-hook #'global-flycheck-mode)
-
-(elpy-enable)
-
-(setq-default flycheck-flake8-maximum-line-length 120)
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("9dae95cdbed1505d45322ef8b5aa90ccb6cb59e0ff26fef0b8f411dfc416c552" "885ef8634f55df1fa067838330e3aa24d97be9b48c30eadd533fde4972543b55" "e24180589c0267df991cf54bf1a795c07d00b24169206106624bb844292807b9" "0c311fb22e6197daba9123f43da98f273d2bfaeeaeb653007ad1ee77f0003037" "e02ba8d4d8165ae7d9f3f8da11483c3273c8d794fddbf798caf381c6941a6142" "3164a65923ef23e0f3dff9f9607b4da1e07ef1c3888d0f6878feef6c28357732" default))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-(load-theme 'twilight)
-;;(setq exec-path (cons "D:/Tools/Go/" exec-path))
-
-;; everything go related
-(defun my-go-mode-hook ()
-  ; Use goimports instead of go-fmt
-  (setq gofmt-command "goimports")
-  ; Call Gofmt before saving
-  (add-hook 'after-save-hook 'gofmt)
-  ; Customize compile command to run go build
-  (if (not (string-match "go" compile-command))
-      (set (make-local-variable 'compile-command)
-           "go build -v && go test -v && go vet"))
-  ; Godef jump key binding
-  (local-set-key (kbd "M-.") 'godef-jump))
-(add-hook 'go-mode-hook 'my-go-mode-hook)
-
-(add-hook 'go-mode-hook (lambda () (local-set-key (kbd "C-c C-r") 'go-remove-unused-imports)))
-(add-hook 'go-mode-hook (lambda () (local-set-key (kbd "C-c i") 'go-goto-imports)))
-(add-hook 'go-mode-hook (lambda () (local-set-key (kbd "M-.") 'godef-jump)))
-
-(add-to-list 'load-path "~/.emacs.d/modes")
-;; golang autocomplete
-(require 'go-autocomplete)
-(require 'auto-complete-config)
-(setq ac-auto-start nil)
-; M-/ still triggers emacs-style autocomplete, TAB gives a fancy menu
-(ac-set-trigger-key "TAB")
-(global-auto-complete-mode t)
-(add-to-list 'ac-modes 'go-mode)
-
-(require 'go-mode)
-(add-hook 'after-init-hook #'global-flycheck-mode)
-
-;(setq exec-path (append exec-path '(getenv "GOBIN")))
-(require 'gofmt-replace)
+;; beautify
+(eval-after-load 'js2-mode
+  '(define-key js2-mode-map (kbd "C-c b") 'web-beautify-js))
+(eval-after-load 'json-mode
+  '(define-key json-mode-map (kbd "C-c b") 'web-beautify-js))
+(eval-after-load 'sgml-mode
+  '(define-key html-mode-map (kbd "C-c b") 'web-beautify-html))
+(eval-after-load 'css-mode
+  '(define-key css-mode-map (kbd "C-c b") 'web-beautify-css))
+(eval-after-load 'js2-mode
+  '(add-hook 'js2-mode-hook
+             (lambda ()
+               (add-hook 'before-save-hook 'web-beautify-js-buffer t t))))
+(eval-after-load 'json-mode
+  '(add-hook 'json-mode-hook
+             (lambda ()
+               (add-hook 'before-save-hook 'web-beautify-js-buffer t t))))
+(eval-after-load 'sgml-mode
+  '(add-hook 'html-mode-hook
+             (lambda ()
+               (add-hook 'before-save-hook 'web-beautify-html-buffer t t))))
+(eval-after-load 'css-mode
+  '(add-hook 'css-mode-hook
+             (lambda ()
+               (add-hook 'before-save-hook 'web-beautify-css-buffer t t))))
 
 (provide 'init)
 ;;; init.el ends here
