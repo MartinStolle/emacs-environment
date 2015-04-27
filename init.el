@@ -1,3 +1,6 @@
+;;; package --- Summary
+;;; Commentary:
+;;; Code:
 ;; Milkypostman’s Emacs Lisp Package Archive
 (require 'package)
 (add-to-list 'package-archives
@@ -82,6 +85,11 @@
   '(add-hook 'css-mode-hook
              (lambda ()
                (add-hook 'before-save-hook 'web-beautify-css-buffer t t))))
+
+(add-hook 'after-init-hook #'global-flycheck-mode)
+
+(elpy-enable)
+(setq-default flycheck-flake8-maximum-line-length 120)
 
 (provide 'init)
 ;;; init.el ends here
