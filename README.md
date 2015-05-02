@@ -10,7 +10,6 @@
 
 ## Python Environment
 
-- [flycheck](https://github.com/flycheck/flycheck): modern on-the-fly syntax checking extension
 - [elpy](https://github.com/jorgenschaefer/elpy): Advanced Python support in emacs
 
 ```
