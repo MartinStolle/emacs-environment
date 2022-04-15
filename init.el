@@ -122,6 +122,7 @@
 (global-set-key (kbd "<mouse-5>") 'scroll-down)
 
 (straight-use-package 'use-package)
+(straight-use-package 'yasnippet)
 
 ;; Auto update packages - still not sure if settings will work in corporate environment
 ;; (use-package auto-package-update
@@ -211,7 +212,9 @@
   :init
   (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
   :config
-  (lsp-enable-which-key-integration t))
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (lsp-enable-which-key-integration t)
+  )
 
 (use-package lsp-ui
   :straight t
@@ -223,33 +226,29 @@
   :straight t
   :after lsp)
 
-;; https://github.com/10sr/with-venv-el
-;; search for suitable venv directory for current evironment
-(straight-use-package 'with-venv)
-
 ;; Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
 (use-package dap-mode
   :straight t
-  ;; Uncomment the config below if you want all UI panes to be hidden by default!
-  ;; :custom
-  ;; (lsp-enable-dap-auto-configure nil)
-  ;; :config
-  ;; (dap-ui-mode 1)
-  :commands dap-debug
+  :init
+  (add-hook 'dap-stopped-hook
+          (lambda (arg) (call-interactively #'dap-hydra)))
+  :custom
+  (lsp-enable-dap-auto-configure nil)
   :config
-  ;; Temporal fix
-  (defun dap-python--pyenv-executable-find (command)
-    (with-venv (executable-find "python")))
-  )
+  (dap-ui-mode 1)
+  ;; we use hydra, these dont work anyway
+  (dap-ui-controls-mode -1)
+  :commands dap-debug)
 
 ;; requires previous pip install 'python-lsp-server[all]' https://emacs-lsp.github.io/lsp-mode/page/lsp-pylsp/
 ;; dap mode requires pip install "ptvsd>=4.2" https://emacs-lsp.github.io/dap-mode/page/configuration/#python
+;; dap mode also need pip install debugpy
 (use-package python-mode
   :straight t
   :hook (python-mode . lsp-deferred)
   :custom
-  (python-shell-interpreter "python.exe")
-  (dap-python-executable "python.exe")
+  (python-shell-interpreter (concat default-directory ".venv/Scripts/python"))
+  (dap-python-executable (concat default-directory ".venv/Scripts/python"))
   (dap-python-debugger 'debugpy)
   :config
   (require 'dap-python))
