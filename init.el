@@ -1,26 +1,75 @@
-;;; package --- Summary
-;;; Commentary:
+;;; init.el --- Personal configuration file -*- lexical-binding: t -*-
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
 ;;; Code:
 ;; Milkypostman’s Emacs Lisp Package Archive
-(require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.org/packages/") t)
-(when (< emacs-major-version 24)
-  ;; For important compatibility libraries like cl-lib
-  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
-(package-initialize)
+
+;; straight.el package management
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; Install use-package
+(straight-use-package 'use-package)
+
+;; Configure use-package to use straight.el by default
+(use-package straight
+  :custom (straight-use-package-by-default t))
 
 ;; Turn off mouse interface early in startup to avoid momentary display
 (tool-bar-mode -1)
+;; Hide scrollbar
+(menu-bar-mode -1)
+;; Hide scrollbar
 (scroll-bar-mode -1)
+;; Display the current column with
+(setq column-number-mode t)
+
+;; Recentf is a minor mode that builds a list of recently opened files.
+(recentf-mode 1)
+(setq recentf-max-menu-items 25)
+(setq recentf-max-saved-items 25)
+(global-set-key "\C-x\ \C-r" 'recentf-open-files)
+
+;; Purpose: When you visit a file, point goes to the last place where it was when you previously visited the same file.
+(save-place-mode 1)
+;; Auto revert after you changed the file in Emacs
+(global-auto-revert-mode 1)
 
 ;; No splash screen please ... jeez
 (setq inhibit-startup-message t)
+
+;; Do ding !
+(setq visible-bell t)
 
 ;; Write backup files to own directory
 (setq backup-directory-alist
       `(("." . ,(expand-file-name
 		 (concat user-emacs-directory "backups")))))
+
+;; The variable indent-tabs-mode controls whether tabs are used for indentation.
+(setq-default indent-tabs-mode nil)
 
 ;; ido-mode allows many operations (like buffer switching and file navigation) to be enhanced with
 ;; instant feedback among the completion choices
@@ -33,11 +82,16 @@
 (setq uniquify-buffer-name-style 'forward)
 
 ;; The saveplace library saves the location of the point when you kill a buffer and returns to it next time
-(server-start)
+(require 'server)
+(unless (server-running-p)
+  (server-start))
 
-;; you visit the associated file.
+;; When you visit a file, point goes to the last place where it was when you previously visited the same file.
 (require 'saveplace)
 (setq-default save-place t)
+
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 (global-set-key (kbd "M-/") 'hippie-expand)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -50,43 +104,154 @@
 ;; show-paren-mode highlights the matching pair when the point is over parentheses.
 (show-paren-mode 1)
 
-;; web development
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.jsx\\'" . jsx-mode))
+;; supercool multiline edit
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 
-;; beautify
-(eval-after-load 'js2-mode
-  '(define-key js2-mode-map (kbd "C-c b") 'web-beautify-js))
-(eval-after-load 'json-mode
-  '(define-key json-mode-map (kbd "C-c b") 'web-beautify-js))
-(eval-after-load 'sgml-mode
-  '(define-key html-mode-map (kbd "C-c b") 'web-beautify-html))
-(eval-after-load 'css-mode
-  '(define-key css-mode-map (kbd "C-c b") 'web-beautify-css))
-(eval-after-load 'js2-mode
-  '(add-hook 'js2-mode-hook
-             (lambda ()
-               (add-hook 'before-save-hook 'web-beautify-js-buffer t t))))
-(eval-after-load 'json-mode
-  '(add-hook 'json-mode-hook
-             (lambda ()
-               (add-hook 'before-save-hook 'web-beautify-js-buffer t t))))
-(eval-after-load 'sgml-mode
-  '(add-hook 'html-mode-hook
-             (lambda ()
-               (add-hook 'before-save-hook 'web-beautify-html-buffer t t))))
-(eval-after-load 'css-mode
-  '(add-hook 'css-mode-hook
-             (lambda ()
-               (add-hook 'before-save-hook 'web-beautify-css-buffer t t))))
+;; mouse scroll
+(global-set-key (kbd "<mouse-4>") 'scroll-up)
+(global-set-key (kbd "<mouse-5>") 'scroll-down)
 
-(elpy-enable)
+(straight-use-package 'use-package)
+
+;; https://github.com/winterTTr/ace-jump-mode
+(use-package ace-jump-mode
+  :straight t
+  :bind ("C-c SPC" . ace-jump-mode))
+
+;; https://github.com/abo-abo/ace-window
+(use-package ace-window
+  :straight t
+  :bind ("C-x o" . ace-window))
+
+;; dont automatically save and restore undo-tree history along with buffer
+(use-package undo-tree
+  :straight t
+  :init
+  (setq undo-tree-auto-save-history nil)
+  :config
+  (global-undo-tree-mode))
+
+;; https://github.com/emacs-helm/
+(use-package helm
+  :straight t
+  :bind (("M-x" . helm-M-x)
+         ("C-x C-f" . helm-find-files)))
+
+;; git integration
+(use-package magit
+  :commands magit-status)
+
+;; In split copy command copies files automatically to other window
+(use-package dired
+  :straight (:type built-in)
+  :commands (dired dired-jump)
+  :bind (("C-x C-j" . dired-jump))
+  :custom
+  (setq dired-dwim-target t))
+
+;; Org Mode add ons
+(use-package org
+  :straight (:type built-in)
+  :custom
+  (load "~/custom/custom.el")
+  (org-add-link-type "gsep" 'make-gsep-link)
+  (org-add-link-type "team" 'make-team-link)
+  (org-add-link-type "jira" 'make-jira-link)
+  (org-add-link-type "asam" 'make-asam-link)
+  ;; auto indent mode for org mode just works against me!
+  (electric-indent-mode -1))
+
+;; minor syntax highlighting for eshell
+(use-package eshell-syntax-highlighting
+  :straight t
+  :after eshell-mode
+  :config
+  ;; Enable in all Eshell buffers.
+  (eshell-syntax-highlighting-global-mode +1))
+
+;; Load my nice theme
+(use-package doom-themes
+  :straight t
+  :init (load-theme 'doom-nord t))
+
+;;
+;; IDE
+;;
+;; which-key is a minor dependency for lsp-mode
+(use-package which-key
+  :straight t
+  :config
+  (which-key-mode))
+
+;; Language Server Protocol
+(use-package lsp-mode
+  :straight t
+  :commands (lsp lsp-deferred)
+  :init
+  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  :config
+  (lsp-enable-which-key-integration t))
+
+(use-package lsp-ui
+  :straight t
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  (lsp-ui-doc-position 'bottom))
+
+(use-package lsp-ivy
+  :straight t
+  :after lsp)
+
+;; https://github.com/10sr/with-venv-el
+;; search for suitable venv directory for current evironment
+(straight-use-package 'with-venv)
+
+;; Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
+(use-package dap-mode
+  :straight t
+  ;; Uncomment the config below if you want all UI panes to be hidden by default!
+  ;; :custom
+  ;; (lsp-enable-dap-auto-configure nil)
+  ;; :config
+  ;; (dap-ui-mode 1)
+  :commands dap-debug
+  :config
+  ;; Temporal fix
+  (defun dap-python--pyenv-executable-find (command)
+    (with-venv (executable-find "python")))
+  )
+
+;; requires previous pip install 'python-lsp-server[all]' https://emacs-lsp.github.io/lsp-mode/page/lsp-pylsp/
+;; dap mode requires pip install "ptvsd>=4.2" https://emacs-lsp.github.io/dap-mode/page/configuration/#python
+(use-package python-mode
+  :straight t
+  :hook (python-mode . lsp-deferred)
+  :custom
+  (python-shell-interpreter "python.exe")
+  (dap-python-executable "python.exe")
+  (dap-python-debugger 'debugpy)
+  :config
+  (require 'dap-python))
+
+(use-package pyvenv
+  :straight t
+  :after python-mode
+  :config
+  (pyvenv-mode 1))
+
+(use-package company
+  :straight t
+  :after lsp-mode
+  :hook (lsp-mode . company-mode)
+  :bind (:map company-active-map
+         ("<tab>" . company-complete-selection))
+        (:map lsp-mode-map
+         ("<tab>" . company-indent-or-complete-common))
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0))
 
 (provide 'init)
 ;;; init.el ends here
