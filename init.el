@@ -127,6 +127,17 @@
 
 (straight-use-package 'use-package)
 
+;; Auto update packages - still not sure if settings will work in corporate environment
+;; (use-package auto-package-update
+;;   :straight t
+;;   :custom
+;;   (auto-package-update-interval 7)
+;;   (auto-package-update-prompt-before-update t)
+;;   (auto-package-update-hide-results t)
+;;   :config
+;;   (auto-package-update-maybe)
+;;   (auto-package-update-at-time "09:00"))
+
 ;; https://github.com/winterTTr/ace-jump-mode
 (use-package ace-jump-mode
   :straight t
