@@ -27,6 +27,10 @@
 
 ;;; Code:
 ;; Milkypostman’s Emacs Lisp Package Archive
+;; default directory where all my projects are
+(setq default-project-directory "e:/git/")
+;; default location for my Python virtual environments
+(setq default-python-venv ".venv/Scripts/python")
 
 ;; straight.el package management
 (defvar bootstrap-version)
@@ -57,6 +61,9 @@
 (scroll-bar-mode -1)
 ;; Display the current column with
 (setq column-number-mode t)
+
+;; Set up defaults for the Latin-1 character set, which supports most of the languages of Western Europe.
+(set-language-environment "Latin-1")
 
 ;; Recentf is a minor mode that builds a list of recently opened files.
 (recentf-mode 1)
@@ -247,8 +254,8 @@
   :straight t
   :hook (python-mode . lsp-deferred)
   :custom
-  (python-shell-interpreter (concat default-directory ".venv/Scripts/python"))
-  (dap-python-executable (concat default-directory ".venv/Scripts/python"))
+  (python-shell-interpreter (concat default-directory default-python-venv))
+  (dap-python-executable (concat default-directory default-python-venv))
   (dap-python-debugger 'debugpy)
   :config
   (require 'dap-python))
@@ -270,6 +277,18 @@
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
+
+;; https://docs.projectile.mx/ Projectile is a project interaction library
+(use-package projectile
+  :straight t
+  :init
+  (projectile-mode +1)
+  (setq projectile-completion-system 'ivy)
+  (setq projectile-indexing-method 'alien)
+  (setq projectile-project-search-path '((default-project-directory . 2)))
+  (add-to-list 'projectile-globally-ignored-directories "^\\.venv$")
+  :bind (:map projectile-mode-map
+              ("C-c p" . projectile-command-map)))
 
 (provide 'init)
 ;;; init.el ends here
