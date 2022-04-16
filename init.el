@@ -129,7 +129,13 @@
 (global-set-key (kbd "<mouse-5>") 'scroll-down)
 
 (straight-use-package 'use-package)
-(straight-use-package 'yasnippet)
+
+;; https://github.com/joaotavora/yasnippet type an abbreviation and automatically expand it into function templates
+(use-package yasnippet
+  :straight t
+  :init
+  (yas-global-mode 1))
+(straight-use-package 'yasnippet-snippets)
 
 ;; Auto update packages - still not sure if settings will work in corporate environment
 ;; (use-package auto-package-update
@@ -203,9 +209,50 @@
   :straight t
   :init (load-theme 'doom-nord t))
 
+;; Python specific settings
+;; Taken from https://github.com/douglasdavis/dot-emacs/blob/main/init.el
+(use-package python
+  :straight (:type built-in)
+  :init
+  (setq python-indent-guess-indent-offset nil)
+  :config
+  (defvar pyvenv-virtual-env)
+  (defun dd/run-python ()
+    "Intelligently run a Python shell."
+    (interactive)
+    (if pyvenv-virtual-env
+        (run-python)
+      (progn
+        (call-interactively #'pyvenv-workon)
+        (run-python))))
+
+  (defun dd/py-workon-project-venv ()
+    "Call pyenv-workon with the current projectile project name.
+  This will return the full path of the associated virtual
+  environment found in $WORKON_HOME, or nil if the environment
+  does not exist."
+    (let ((pname (projectile-project-name)))
+      (pyvenv-workon pname)
+      (if (file-directory-p pyvenv-virtual-env)
+          pyvenv-virtual-env
+        (pyvenv-deactivate)))))
+
 ;;
 ;; IDE
 ;;
+
+;; https://docs.projectile.mx/ Projectile is a project interaction library
+(use-package projectile
+  :straight t
+  :init
+  (projectile-mode +1)
+  (setq projectile-completion-system 'ivy)
+  (setq projectile-indexing-method 'alien)
+  (setq projectile-project-search-path '((default-project-directory . 2)))
+  (add-to-list 'projectile-globally-ignored-directories "^\\.venv$")
+  :bind (:map projectile-mode-map
+              ("C-c p" . projectile-command-map)))
+
 ;; which-key is a minor dependency for lsp-mode
 (use-package which-key
   :straight t
@@ -277,18 +324,6 @@
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
-
-;; https://docs.projectile.mx/ Projectile is a project interaction library
-(use-package projectile
-  :straight t
-  :init
-  (projectile-mode +1)
-  (setq projectile-completion-system 'ivy)
-  (setq projectile-indexing-method 'alien)
-  (setq projectile-project-search-path '((default-project-directory . 2)))
-  (add-to-list 'projectile-globally-ignored-directories "^\\.venv$")
-  :bind (:map projectile-mode-map
-              ("C-c p" . projectile-command-map)))
 
 (provide 'init)
 ;;; init.el ends here
