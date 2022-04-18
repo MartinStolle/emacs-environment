@@ -124,15 +124,16 @@
 
 (straight-use-package 'use-package)
 
-;; add additional init files
-(push (expand-file-name "custom" user-emacs-directory) load-path)
-
 ;; https://github.com/joaotavora/yasnippet type an abbreviation and automatically expand it into function templates
 (use-package yasnippet
   :straight t
+  :after python
   :init
   (yas-global-mode 1))
-(straight-use-package 'yasnippet-snippets)
+(use-package yasnippet-snippets
+  :straight t
+  :after yasnippet
+  )
 
 ;; Auto update packages - still not sure if settings will work in corporate environment
 ;; (use-package auto-package-update
@@ -201,11 +202,6 @@
 (use-package all-the-icons-dired
   :straight t
   :hook (dired-mode . all-the-icons-dired-mode))
-
-;; Load my nice theme
-(use-package doom-themes
-  :straight t
-  :init (load-theme 'doom-nord t))
 
 (use-package python
   :straight (:type built-in)
@@ -325,6 +321,14 @@
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
+
+;; Load my nice theme
+(use-package doom-themes
+  :straight t
+  :init (load-theme 'doom-nord t))
+
+;; add additional init files
+(push (expand-file-name "custom" user-emacs-directory) load-path)
 
 (require 'init-org)
 (require 'init-eshell)

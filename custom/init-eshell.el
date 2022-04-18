@@ -20,6 +20,7 @@
 
 (use-package eshell
   :straight (:type built-in)
+  :commands eshell
   :defines eshell-prompt-function
   :config
   ;; Use 'prepend for the NS and Mac ports or Emacs will crash.
