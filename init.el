@@ -124,6 +124,9 @@
 
 (straight-use-package 'use-package)
 
+;; add additional init files
+(push (expand-file-name "custom" user-emacs-directory) load-path)
+
 ;; https://github.com/joaotavora/yasnippet type an abbreviation and automatically expand it into function templates
 (use-package yasnippet
   :straight t
@@ -210,19 +213,6 @@
   (org-add-link-type "asam" 'make-asam-link)
   ;; auto indent mode for org mode just works against me!
   (electric-indent-mode -1))
-
-(use-package eshell
-  :straight (:type built-in)
-  :load-path "~/.emacs.d/custom/esh-custom.el"
-  )
-
-;; minor syntax highlighting for eshell
-(use-package eshell-syntax-highlighting
-  :straight t
-  :after eshell-mode
-  :config
-  ;; Enable in all Eshell buffers.
-  (eshell-syntax-highlighting-global-mode +1))
 
 ;; Load my nice theme
 (use-package doom-themes
@@ -347,6 +337,8 @@
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
+
+(require 'init-eshell)
 
 (provide 'init)
 ;;; init.el ends here
