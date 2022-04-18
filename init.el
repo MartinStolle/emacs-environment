@@ -60,10 +60,14 @@
 (set-language-environment "Latin-1")
 
 ;; Recentf is a minor mode that builds a list of recently opened files.
-(recentf-mode 1)
-(setq recentf-max-menu-items 25)
-(setq recentf-max-saved-items 25)
-(global-set-key "\C-x\ \C-r" 'recentf-open-files)
+(use-package recentf
+  :straight (:type built-in)
+  :bind ("C-x C-r" . recentf-open-files)
+  :init
+  (recentf-mode 1)
+  :custom
+  (recentf-max-menu-items 25)
+  (recentf-max-saved-items 25))
 
 ;; Purpose: When you visit a file, point goes to the last place where it was when you previously visited the same file.
 (save-place-mode 1)
@@ -94,7 +98,7 @@
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
 
-;; The saveplace library saves the location of the point when you kill a buffer and returns to it next time
+;; use single emacs instance
 (require 'server)
 (unless (server-running-p)
   (server-start))
@@ -130,6 +134,7 @@
   :after python
   :init
   (yas-global-mode 1))
+
 (use-package yasnippet-snippets
   :straight t
   :after yasnippet
