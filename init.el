@@ -202,18 +202,6 @@
   :straight t
   :hook (dired-mode . all-the-icons-dired-mode))
 
-;; Org Mode add ons
-(use-package org
-  :straight (:type built-in)
-  :custom
-  (load "~/.emacs.d/custom/custom.el")
-  (org-add-link-type "gsep" 'make-gsep-link)
-  (org-add-link-type "team" 'make-team-link)
-  (org-add-link-type "jira" 'make-jira-link)
-  (org-add-link-type "asam" 'make-asam-link)
-  ;; auto indent mode for org mode just works against me!
-  (electric-indent-mode -1))
-
 ;; Load my nice theme
 (use-package doom-themes
   :straight t
@@ -338,6 +326,7 @@
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
 
+(require 'init-org)
 (require 'init-eshell)
 
 (provide 'init)
