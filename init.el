@@ -344,6 +344,20 @@
                      (agenda . 5)))
   )
 
+;; A better, more detailed help buffer.
+(use-package helpful
+  :straight t
+  :custom
+  ;; Use helpful in `helm-apropos'
+  (helm-describe-function-function 'helpful-function)
+  (helm-describe-variable-function 'helpful-variable)
+  :bind
+  (([remap describe-function] . helpful-callable)
+   ([remap describe-variable] . helpful-variable)
+   ([remap describe-key] . helpful-key)
+   :map emacs-lisp-mode-map
+   ("C-c C-d" . helpful-at-point)))
+
 ;; add additional init files
 (push (expand-file-name "custom" user-emacs-directory) load-path)
 
