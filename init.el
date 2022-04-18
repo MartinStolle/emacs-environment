@@ -28,9 +28,7 @@
 ;;; Code:
 ;; Milkypostman’s Emacs Lisp Package Archive
 ;; default directory where all my projects are
-(setq default-project-directory "e:/git/")
-;; default location for my Python virtual environments
-(setq default-python-venv ".venv/Scripts/python")
+(defvar default-project-directory "e:/git/")
 
 ;; straight.el package management
 (defvar bootstrap-version)
@@ -45,6 +43,8 @@
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
+;; Setting this variable to a small integer will reduce the size of repositories. This variable affects all packages, even those whose versions are locked.
+(setq straight-vc-git-default-clone-depth 1)
 
 ;; Install use-package
 (straight-use-package 'use-package)
@@ -53,12 +53,6 @@
 (use-package straight
   :custom (straight-use-package-by-default t))
 
-;; Turn off mouse interface early in startup to avoid momentary display
-(tool-bar-mode -1)
-;; Hide scrollbar
-(menu-bar-mode -1)
-;; Hide scrollbar
-(scroll-bar-mode -1)
 ;; Display the current column with
 (setq column-number-mode t)
 
@@ -184,6 +178,14 @@
   :custom
   (setq dired-dwim-target t))
 
+;; Prerequisite for a few packages (e.g. all-the-icons-dired)
+;; "M-x all-the-icons-install-fonts" to install fonts at the first time.
+(straight-use-package 'all-the-icons)
+;; https://github.com/jtbm37/all-the-icons-dired dired with nice icons
+(use-package all-the-icons-dired
+  :straight t
+  :hook (dired-mode . all-the-icons-dired-mode))
+
 ;; Org Mode add ons
 (use-package org
   :straight (:type built-in)
@@ -209,33 +211,47 @@
   :straight t
   :init (load-theme 'doom-nord t))
 
-;; Python specific settings
-;; Taken from https://github.com/douglasdavis/dot-emacs/blob/main/init.el
 (use-package python
   :straight (:type built-in)
-  :init
-  (setq python-indent-guess-indent-offset nil)
-  :config
-  (defvar pyvenv-virtual-env)
-  (defun dd/run-python ()
-    "Intelligently run a Python shell."
-    (interactive)
-    (if pyvenv-virtual-env
-        (run-python)
-      (progn
-        (call-interactively #'pyvenv-workon)
-        (run-python))))
+  :custom
+  (python-indent-guess-indent-offset-verbose nil)
+  :bind
+  ( :map python-mode-map
+    ("C-c r" . python-indent-shift-right)
+    ("C-c l" . python-indent-shift-left))
+  :hook
+  ;; NOTE: these hooks runs in reverse order
+  ;; move recently and frequently used candidates to the top of the completions list, but otherwise leave candidate ordering alone.
+  (python-mode . (lambda () (setq-local company-prescient-sort-length-enable nil)))
+  (python-mode . lsp-deferred)
+  (python-mode . fk/activate-pyvenv))
 
-  (defun dd/py-workon-project-venv ()
-    "Call pyenv-workon with the current projectile project name.
-  This will return the full path of the associated virtual
-  environment found in $WORKON_HOME, or nil if the environment
-  does not exist."
-    (let ((pname (projectile-project-name)))
-      (pyvenv-workon pname)
-      (if (file-directory-p pyvenv-virtual-env)
-          pyvenv-virtual-env
-        (pyvenv-deactivate)))))
+(use-package pyvenv
+  :straight t
+  :after python
+  :config
+    (defun fk/get-venv-name ()
+    "Get venv name of current python project."
+    (when-let* ((root-dir (projectile-project-root))
+                (venv-file (concat root-dir ".venv"))
+                (venv-exists (file-exists-p venv-file))
+                (venv-name (with-temp-buffer
+                             (insert-file-contents venv-file)
+                             (nth 0 (split-string (buffer-string))))))
+      venv-name))
+
+  (defun fk/activate-pyvenv ()
+    "Activate python environment according to the `project-root/.venv' file."
+    (interactive)
+    (when-let ((venv-name (fk/get-venv-name)))
+      (pyvenv-mode)
+      (pyvenv-workon venv-name)))
+
+  ;; python-mode hook is not enough when more than one project's files are open.
+  ;; It just re-activate pyvenv when a new file is opened, it should re-activate
+  ;; on buffer or perspective switching too. NOTE: restarting lsp server is
+  ;; heavy, so it should be done manually if needed.
+  (add-hook 'window-configuration-change-hook 'fk/activate-pyvenv))
 
 ;;
 ;; IDE
@@ -281,6 +297,9 @@
   :after lsp)
 
 ;; Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
+;; requires previous pip install 'python-lsp-server[all]' https://emacs-lsp.github.io/lsp-mode/page/lsp-pylsp/
+;; dap mode requires pip install "ptvsd>=4.2" https://emacs-lsp.github.io/dap-mode/page/configuration/#python
+;; dap mode also need pip install debugpy
 (use-package dap-mode
   :straight t
   :init
@@ -294,25 +313,8 @@
   (dap-ui-controls-mode -1)
   :commands dap-debug)
 
-;; requires previous pip install 'python-lsp-server[all]' https://emacs-lsp.github.io/lsp-mode/page/lsp-pylsp/
-;; dap mode requires pip install "ptvsd>=4.2" https://emacs-lsp.github.io/dap-mode/page/configuration/#python
-;; dap mode also need pip install debugpy
-(use-package python-mode
-  :straight t
-  :hook (python-mode . lsp-deferred)
-  :custom
-  (python-shell-interpreter (concat default-directory default-python-venv))
-  (dap-python-executable (concat default-directory default-python-venv))
-  (dap-python-debugger 'debugpy)
-  :config
-  (require 'dap-python))
-
-(use-package pyvenv
-  :straight t
-  :after python-mode
-  :config
-  (pyvenv-mode 1))
-
+;; http://company-mode.github.io/
+;; text completion framework
 (use-package company
   :straight t
   :after lsp-mode

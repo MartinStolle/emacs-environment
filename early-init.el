@@ -14,6 +14,13 @@
                                                         before-init-time)))
                      gcs-done)))
 
+;; Turn off mouse interface early in startup to avoid momentary display
+(tool-bar-mode -1)
+;; Hide scrollbar
+(menu-bar-mode -1)
+;; Hide scrollbar
+(scroll-bar-mode -1)
+
 (setq frame-inhibit-implied-resize t)
 (setq inhibit-startup-screen t)
 (setq custom-safe-themes t)
