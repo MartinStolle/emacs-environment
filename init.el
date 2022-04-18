@@ -176,7 +176,20 @@
   :commands (dired dired-jump)
   :bind (("C-x C-j" . dired-jump))
   :custom
-  (setq dired-dwim-target t))
+  ;; ls parameters:
+  ;; -l     use a long listing format
+  ;; -A, --almost-all
+  ;;        do not list implied . and ..
+  ;; -h, --human-readable
+  ;;        with -l and -s, print sizes like 1K 234M 2G etc.
+  ;; -p, --indicator-style=slash
+  ;;        append / indicator to directories
+  (dired-listing-switches "-lAhp --group-directories-first")
+  (setq dired-dwim-target t)
+  :config
+  ;; Dired in single buffer (prevent dired from opening a lot of buffers)
+  (put 'dired-find-alternate-file 'disabled nil)
+  )
 
 ;; Prerequisite for a few packages (e.g. all-the-icons-dired)
 ;; "M-x all-the-icons-install-fonts" to install fonts at the first time.
@@ -190,13 +203,18 @@
 (use-package org
   :straight (:type built-in)
   :custom
-  (load "~/custom/custom.el")
+  (load "~/.emacs.d/custom/custom.el")
   (org-add-link-type "gsep" 'make-gsep-link)
   (org-add-link-type "team" 'make-team-link)
   (org-add-link-type "jira" 'make-jira-link)
   (org-add-link-type "asam" 'make-asam-link)
   ;; auto indent mode for org mode just works against me!
   (electric-indent-mode -1))
+
+(use-package eshell
+  :straight (:type built-in)
+  :load-path "~/.emacs.d/custom/esh-custom.el"
+  )
 
 ;; minor syntax highlighting for eshell
 (use-package eshell-syntax-highlighting
@@ -224,34 +242,37 @@
   ;; move recently and frequently used candidates to the top of the completions list, but otherwise leave candidate ordering alone.
   (python-mode . (lambda () (setq-local company-prescient-sort-length-enable nil)))
   (python-mode . lsp-deferred)
-  (python-mode . fk/activate-pyvenv))
+  ;; (python-mode . fk/activate-pyvenv)
+  )
 
 (use-package pyvenv
   :straight t
   :after python
-  :config
-    (defun fk/get-venv-name ()
-    "Get venv name of current python project."
-    (when-let* ((root-dir (projectile-project-root))
-                (venv-file (concat root-dir ".venv"))
-                (venv-exists (file-exists-p venv-file))
-                (venv-name (with-temp-buffer
-                             (insert-file-contents venv-file)
-                             (nth 0 (split-string (buffer-string))))))
-      venv-name))
+  ;; :config
+  ;; (defun fk/get-venv-name ()
+  ;;   "Get venv name of current python project."
+  ;;   (when-let* ((root-dir (projectile-project-root))
+  ;;               (venv-file (concat root-dir ".venv"))
+  ;;               (venv-exists (file-exists-p venv-file))
+  ;;               (venv-name (with-temp-buffer
+  ;;                            (insert-file-contents venv-file)
+  ;;                            (nth 0 (split-string (buffer-string))))))
+  ;;     venv-name))
 
-  (defun fk/activate-pyvenv ()
-    "Activate python environment according to the `project-root/.venv' file."
-    (interactive)
-    (when-let ((venv-name (fk/get-venv-name)))
-      (pyvenv-mode)
-      (pyvenv-workon venv-name)))
+  ;; (defun fk/activate-pyvenv ()
+  ;;   "Activate python environment according to the `project-root/.venv' file."
+  ;;   (interactive)
+  ;;   (when-let ((venv-name (fk/get-venv-name)))
+  ;;     (pyvenv-mode)
+  ;;     (pyvenv-workon venv-name)))
 
   ;; python-mode hook is not enough when more than one project's files are open.
   ;; It just re-activate pyvenv when a new file is opened, it should re-activate
   ;; on buffer or perspective switching too. NOTE: restarting lsp server is
   ;; heavy, so it should be done manually if needed.
-  (add-hook 'window-configuration-change-hook 'fk/activate-pyvenv))
+  ;; commented out, not working on my windows machine
+  ;; (add-hook 'window-configuration-change-hook 'fk/activate-pyvenv))
+  )
 
 ;;
 ;; IDE

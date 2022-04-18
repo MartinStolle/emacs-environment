@@ -7,12 +7,10 @@
 
 (require 'dash)
 (require 's)
-(require 'cl)
 (require 'magit)
 (require 'all-the-icons)
 
 ;; Use 'prepend for the NS and Mac ports or Emacs will crash.
-(set-fontset-font t 'unicode (font-spec :family "FontAwesome") nil 'prepend)
 (set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'prepend)
 
 (defmacro with-face (STR &rest PROPS)
@@ -43,49 +41,40 @@
           eshell-prompt-string))
 
 (esh-section esh-dir
-             (all-the-icons-faicon "folder-open")  ;  (faicon folder)
+             nil
              (abbreviate-file-name (eshell/pwd))
              '(:foreground "gold"))
 
 (esh-section esh-git
-             (all-the-icons-alltheicon "git")  ;  (git icon)
+             (all-the-icons-alltheicon "git")
              (magit-get-current-branch)
              '(:foreground "pink"))
 
 (esh-section esh-clock
-             "\xf017"  ;  (clock icon)
+             (all-the-icons-alltheicon "terminal")
              (format-time-string "%H:%M" (current-time))
              '(:foreground "forest green"))
 
-;; Below I implement a "prompt number" section
-(setq esh-prompt-num 0)
-
-(add-hook 'eshell-exit-hook (lambda () (setq esh-prompt-num 0)))
-
-(advice-add 'eshell-send-input :before
-            (lambda (&rest args) (setq esh-prompt-num (incf esh-prompt-num))))
-
-(esh-section esh-num
-             "\xf0c9"  ;  (list icon)
-             (number-to-string esh-prompt-num)
-             '(:foreground "brown"))
+(esh-section esh-python
+             (all-the-icons-alltheicon "python")
+             pyvenv-virtual-env-name)
 
 ;; Separator between esh-sections
-(setq esh-sep "  ")  ; or " | "
+(setq esh-sep " | ")
 
 ;; Separator between an esh-section icon and form
 (setq esh-section-delim " ")
 
 ;; Eshell prompt header
-(setq esh-header "\n ")  ; or "\n┌─"
+(setq esh-header "\n┌─")
 
 ;; Eshell prompt regexp and string. Unless you are varying the prompt by eg.
 ;; your login, these can be the same.
-(setq eshell-prompt-regexp " ")   ; or "└─> "
-(setq eshell-prompt-string " ")   ; or "└─> "
+(setq eshell-prompt-regexp "└─>")
+(setq eshell-prompt-string "└─>")
 
 ;; Choose which eshell-funcs to enable
-(setq eshell-funcs (list esh-dir esh-git esh-clock esh-num))
+(setq eshell-funcs (list esh-dir esh-git esh-clock esh-python))
 
 ;; Enable the new eshell prompt
 (setq eshell-prompt-function 'esh-prompt-func)
