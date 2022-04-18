@@ -332,6 +332,18 @@
   :straight t
   :init (load-theme 'doom-nord t))
 
+(use-package dashboard
+  :straight t
+  :config
+  (dashboard-setup-startup-hook)
+  :custom
+  (dashboard-center-content t)
+  (dashboard-items '((recents  . 5)
+                     (bookmarks . 5)
+                     (projects . 5)
+                     (agenda . 5)))
+  )
+
 ;; add additional init files
 (push (expand-file-name "custom" user-emacs-directory) load-path)
 
