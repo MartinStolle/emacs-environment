@@ -298,7 +298,6 @@
 
 ;; Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
 ;; requires previous pip install 'python-lsp-server[all]' https://emacs-lsp.github.io/lsp-mode/page/lsp-pylsp/
-;; dap mode requires pip install "ptvsd>=4.2" https://emacs-lsp.github.io/dap-mode/page/configuration/#python
 ;; dap mode also need pip install debugpy
 (use-package dap-mode
   :straight t
@@ -307,6 +306,8 @@
           (lambda (arg) (call-interactively #'dap-hydra)))
   :custom
   (lsp-enable-dap-auto-configure nil)
+  :hook
+  (python-mode . (lambda () (require 'dap-python)))
   :config
   (dap-ui-mode 1)
   ;; we use hydra, these dont work anyway
@@ -337,6 +338,7 @@
   :config
   (dashboard-setup-startup-hook)
   :custom
+  (dashboard-startup-banner "~/.emacs.d/static/GnuHead.png")
   (dashboard-center-content t)
   (dashboard-items '((recents  . 5)
                      (bookmarks . 5)
