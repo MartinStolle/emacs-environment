@@ -128,6 +128,11 @@
 
 (straight-use-package 'use-package)
 
+;; Behold, the mighty hydra, https://github.com/abo-abo/hydra
+(use-package hydra
+  :straight t
+  :defer t)
+
 ;; https://github.com/joaotavora/yasnippet type an abbreviation and automatically expand it into function templates
 (use-package yasnippet
   :straight t
@@ -198,6 +203,46 @@
   :config
   ;; Dired in single buffer (prevent dired from opening a lot of buffers)
   (put 'dired-find-alternate-file 'disabled nil)
+  (defhydra hydra-dired (:hint nil :color pink)
+    "
+^Mark^                   ^Actions^         ^Control^                 ^Movement^       ^Search^
+^^^^^^^------------------------------------------------------------------------------------------------
+_m_: mark                _+_: create dir   _(_: hide details         _p_: up dir      _S_: search files
+_u_: unmark              _R_: rename       _g_: Refresh buffer       _n_: down dir    _I_: search content
+_U_: unmark all          _C_: copy         _s_: toggle sort by date  _i_: view subdir ^ ^
+_t_: toggle marks        _M_: chmod        _$_: summary              _$_: hide subdir ^ ^
+_t_: mark using regexp   _Z_: compress     _<_: undo                 ^ ^              ^ ^
+_/_: mark all dirs       _D_: delete       _v_: view                 ^ ^              ^ ^
+^ ^                      _=_: diff         ^ ^                       ^ ^              ^ ^
+"
+    ("m" dired-mark)
+    ("u" dired-unmark)
+    ("U" dired-unmark-all-marks)
+    ("t" dired-toggle-marks)
+    ("E" dired-mark-files-regexp)
+    ("/" dired-mark-directories)
+    ("+" dired-create-directory)
+    ("R" dired-do-rename)
+    ("C" dired-do-copy)
+    ("Z" dired-do-compress)
+    ("D" dired-do-delete)
+    ("M" dired-do-chmod)
+    ("=" dired-diff)
+    ("(" dired-hide-details-mode)
+    ("g" revert-buffer)
+    ("s" dired-sort-toggle-or-edit)
+    ("?" dired-summary)
+    ("<" dired-undo)
+    ("v" dired-view-file)
+    ("p" dired-tree-up)
+    ("n" dired-tree-down)
+    ("i" dired-maybe-insert-subdir)
+    ("$" dired-hide-subdir)
+    ("S" dired-isearch-filenames)
+    ("I" dired-do-isearch)
+    ("." nil :color blue).
+    ("q" quit-window "quit" :color blue))
+  (define-key dired-mode-map "." 'hydra-dired/body)
   )
 
 ;; Prerequisite for a few packages (e.g. all-the-icons-dired)
@@ -227,30 +272,6 @@
 (use-package pyvenv
   :straight t
   :after python
-  ;; :config
-  ;; (defun fk/get-venv-name ()
-  ;;   "Get venv name of current python project."
-  ;;   (when-let* ((root-dir (projectile-project-root))
-  ;;               (venv-file (concat root-dir ".venv"))
-  ;;               (venv-exists (file-exists-p venv-file))
-  ;;               (venv-name (with-temp-buffer
-  ;;                            (insert-file-contents venv-file)
-  ;;                            (nth 0 (split-string (buffer-string))))))
-  ;;     venv-name))
-
-  ;; (defun fk/activate-pyvenv ()
-  ;;   "Activate python environment according to the `project-root/.venv' file."
-  ;;   (interactive)
-  ;;   (when-let ((venv-name (fk/get-venv-name)))
-  ;;     (pyvenv-mode)
-  ;;     (pyvenv-workon venv-name)))
-
-  ;; python-mode hook is not enough when more than one project's files are open.
-  ;; It just re-activate pyvenv when a new file is opened, it should re-activate
-  ;; on buffer or perspective switching too. NOTE: restarting lsp server is
-  ;; heavy, so it should be done manually if needed.
-  ;; commented out, not working on my windows machine
-  ;; (add-hook 'window-configuration-change-hook 'fk/activate-pyvenv))
   )
 
 ;;
