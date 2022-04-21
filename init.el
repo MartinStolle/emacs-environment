@@ -128,6 +128,12 @@
 
 (straight-use-package 'use-package)
 
+;; Behold, the mighty hydra, https://github.com/abo-abo/hydra
+(use-package hydra
+  :straight t
+  :defer t
+  )
+
 ;; add hydra to ibuffer
 ;; https://github.com/abo-abo/hydra/wiki/Ibuffer
 (use-package ibuffer
@@ -223,12 +229,6 @@
     ("/" ibuffer-filter-disable "disable")
     ("b" hydra-ibuffer-main/body "back" :color blue))
   (define-key ibuffer-mode-map "." 'hydra-ibuffer-main/body)
-  )
-
-;; Behold, the mighty hydra, https://github.com/abo-abo/hydra
-(use-package hydra
-  :straight t
-  :defer t
   )
 
 ;; https://github.com/joaotavora/yasnippet type an abbreviation and automatically expand it into function templates
@@ -338,8 +338,8 @@ _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^        
     ("$" dired-hide-subdir)
     ("S" dired-isearch-filenames)
     ("I" dired-do-isearch)
-    ("." nil :color blue).
-    ("q" quit-window "quit" :color blue))
+    ("q" quit-window "quit" :color blue)
+    ("." nil "toggle hydra" :color blue))
   (define-key dired-mode-map "." 'hydra-dired/body)
   )
 
