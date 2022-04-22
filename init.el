@@ -243,17 +243,6 @@
   :after yasnippet
   )
 
-;; Auto update packages - still not sure if settings will work in corporate environment
-;; (use-package auto-package-update
-;;   :straight t
-;;   :custom
-;;   (auto-package-update-interval 7)
-;;   (auto-package-update-prompt-before-update t)
-;;   (auto-package-update-hide-results t)
-;;   :config
-;;   (auto-package-update-maybe)
-;;   (auto-package-update-at-time "09:00"))
-
 ;; https://github.com/winterTTr/ace-jump-mode
 (use-package ace-jump-mode
   :straight t
@@ -363,14 +352,19 @@ _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^        
   ;; NOTE: these hooks runs in reverse order
   ;; move recently and frequently used candidates to the top of the completions list, but otherwise leave candidate ordering alone.
   (python-mode . (lambda () (setq-local company-prescient-sort-length-enable nil)))
-  (python-mode . lsp-deferred)
-  ;; (python-mode . fk/activate-pyvenv)
   )
 
+;;
 (use-package pyvenv
   :straight t
   :after python
   )
+
+;; https://www.flycheck.org/
+(use-package flycheck
+  :straight t
+  :init
+  (global-flycheck-mode))
 
 ;;
 ;; IDE
@@ -393,27 +387,6 @@ _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^        
   :straight t
   :config
   (which-key-mode))
-
-;; Language Server Protocol
-(use-package lsp-mode
-  :straight t
-  :commands (lsp lsp-deferred)
-  :init
-  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-  :config
-  (setq lsp-headerline-breadcrumb-enable nil)
-  (lsp-enable-which-key-integration t)
-  )
-
-(use-package lsp-ui
-  :straight t
-  :hook (lsp-mode . lsp-ui-mode)
-  :custom
-  (lsp-ui-doc-position 'bottom))
-
-(use-package lsp-ivy
-  :straight t
-  :after lsp)
 
 ;; Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
 ;; requires previous pip install 'python-lsp-server[all]' https://emacs-lsp.github.io/lsp-mode/page/lsp-pylsp/
