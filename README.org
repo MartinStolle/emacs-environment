@@ -154,7 +154,7 @@ Note: tangle to early-init.el to make startup even faster
 #+END_SRC
 
 Restore it to reasonable value after init. Also stop garbage collection during
-minibuffer interaction (helm etc.).
+minibuffer interaction (ivy etc.).
 #+BEGIN_SRC emacs-lisp
 (defconst 1mb 1048576)
 (defconst 20mb 20971520)
@@ -281,6 +281,9 @@ Keep Emacs directory clean.
 #+END_SRC
 
 ** General
+The uniquify library makes it so that when you visit two files with the same name in different directories,
+the buffer names have the directory name appended to them.
+
 #+BEGIN_SRC emacs-lisp
 (setq-default
  ring-bell-function 'ignore            ; prevent beep sound.
@@ -297,13 +300,15 @@ Keep Emacs directory clean.
  window-resize-pixelwise t)            ; correctly resize windows by pixels (e.g. in split-window functions)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
-
+;; Auto revert after you changed the file in Emacs
 (global-auto-revert-mode)
 ; Purpose: When you visit a file, point goes to the last place where it was when you previously visited the same file.
 (save-place-mode)
-
+; When so-long detects such a file, it calls the command `so-long', which
+; overrides certain minor modes and variables (you can configure the details)
+; to improve performance in the buffer.
 (global-so-long-mode)
-
+; he repeat command will repeat the last action
 (bind-key* "M-r" 'repeat)
 
 (defun fk/add-local-hook (hook function)
@@ -348,10 +353,6 @@ FILTER is function that runs after the process is finished, its args should be
 A better, more detailed *help* buffer.
 #+BEGIN_SRC emacs-lisp
 (use-package helpful
-  :custom
-  ;; Use helpful in `helm-apropos'
-  (helm-describe-function-function 'helpful-function)
-  (helm-describe-variable-function 'helpful-variable)
   :bind
   (([remap describe-function] . helpful-callable)
    ([remap describe-variable] . helpful-variable)
@@ -687,97 +688,388 @@ remove the end line symbols from ~/.emacs.d/straight/build/which-key-posframe/wh
   (dashboard-after-initialize . which-key-mode))
 #+END_SRC
 
-** Helm (General Completion & Selection)
-https://github.com/emacs-helm/
+** Ivy/Counsel
+https://github.com/abo-abo/swiper
+
+Taken from https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-ivy.el
+
 #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :custom
-  (helm-M-x-always-save-history t)
-  (helm-display-function 'pop-to-buffer)
-  (savehist-additional-variables '(extended-command-history))
-  (history-delete-duplicates t)
-  (helm-command-prefix-key nil)
-  ;; Just move the selected text to the top of kill-ring, do not insert the text
-  (helm-kill-ring-actions '(("Copy marked" . (lambda (_str) (kill-new _str)))
-                            ("Delete marked" . helm-kill-ring-action-delete)))
-  :bind
-  (("M-x" . helm-M-x)
-   ("C-x C-f" . helm-find-files)
-   ("C-x C-b" . helm-buffers-list)
-   ("C-x b" . helm-buffers-list)
-   ("C-x C-r" . helm-recentf)
-   ("C-x C-i" . fk/helm-imenu)
-   ("C-x C-j" . fk/helm-imenu)
-   ("M-y" . fk/yank-pop-or-helm-show-kill-ring)
-   :map helm-map
-   ("TAB" . helm-execute-persistent-action)
-   ("<tab>" . helm-execute-persistent-action)
-   ("C-z" . helm-select-action)
-   ("C-w" . backward-kill-word)  ; Fix C-w
-   :map files
-   ("f" . helm-find-files)
-   ("r" . helm-recentf)
-   ("b" . helm-bookmarks)
-   :map buffers
-   ("b" . helm-buffers-list)
-   :map help-map
-   ("a" . helm-apropos))
-  :hook
-  (dashboard-after-initialize . helm-mode)
-  (helm-mode . savehist-mode)
-  (helm-major-mode . fk/darken-background)
-  :config
-  (with-eval-after-load 'helm-buffers
-    (dolist (regexp '("\\*epc con" "\\*helm" "\\*EGLOT" "\\*straight" "\\*Flymake"
-                      "\\*eldoc" "\\*Compile-Log" "\\*xref" "\\*company"
-                      "\\*aw-posframe" "\\*Warnings" "\\*Backtrace"))
-      (add-to-list 'helm-boring-buffer-regexp-list regexp))
-    (bind-keys
-     :map helm-buffer-map
-     ("M-d" . helm-buffer-run-kill-buffers)
-     ("C-M-d" . helm-buffer-run-kill-persistent)))
+  (use-package counsel
+    :diminish ivy-mode counsel-mode
+    :bind (("C-s"   . swiper-isearch)
+           ("C-r"   . swiper-isearch-backward)
+           ("s-f"   . swiper)
+           ("C-S-s" . swiper-all)
 
-  ;; "Waiting for process to die...done" fix.
-  ;; Source: https://github.com/bbatsov/helm-projectile/issues/136#issuecomment-688444955
-  (defun fk/helm--collect-matches (orig-fun src-list &rest args)
-    (let ((matches
-           (cl-loop for src in src-list
-                    collect (helm-compute-matches src))))
-      (unless (eq matches t) matches)))
+           ("C-c C-r" . ivy-resume)
+           ("C-c v p" . ivy-push-view)
+           ("C-c v o" . ivy-pop-view)
+           ("C-c v ." . ivy-switch-view)
 
-  (advice-add 'helm--collect-matches :around 'fk/helm--collect-matches)
+           :map counsel-mode-map
+           ([remap swiper] . counsel-grep-or-swiper)
+           ([remap swiper-backward] . counsel-grep-or-swiper-backward)
+           ([remap dired] . counsel-dired)
+           ([remap set-variable] . counsel-set-variable)
+           ([remap insert-char] . counsel-unicode-char)
+           ([remap recentf-open-files] . counsel-recentf)
+           ([remap org-capture] . counsel-org-capture)
 
-  (require 'helm-imenu)  ; Fixes buggy helm-imenu at first usage
+           ("C-x j"   . counsel-mark-ring)
+           ("C-h F"   . counsel-faces)
 
-  (defun fk/helm-imenu ()
-    "helm-imenu without initializion (preselect)."
-    (interactive)
-    (unless helm-source-imenu
-      (setq helm-source-imenu
-            (helm-make-source "Imenu" 'helm-imenu-source
-              :fuzzy-match helm-imenu-fuzzy-match)))
-    (let* ((imenu-auto-rescan t)
-           (helm-highlight-matches-around-point-max-lines 'never))
-      (helm :sources 'helm-source-imenu
-            :default ""
-            :preselect ""
-            :buffer "*helm imenu*")))
+           ("C-c B" . counsel-bookmarked-directory)
+           ("C-c L" . counsel-load-library)
+           ("C-c O" . counsel-find-file-extern)
+           ("C-c P" . counsel-package)
+           ("C-c R" . counsel-list-processes)
+           ("C-c f" . counsel-find-library)
+           ("C-c g" . counsel-grep)
+           ("C-c h" . counsel-command-history)
+           ("C-c i" . counsel-git)
+           ("C-c j" . counsel-git-grep)
+           ("C-c l" . counsel-git-log)
+           ("C-c o" . counsel-outline)
+           ("C-c r" . counsel-rg)
+           ("C-c z" . counsel-fzf)
 
-  (add-hook 'imenu-after-jump-hook (lambda ()
-                                     (when (derived-mode-p 'outline-mode)
-                                       (show-subtree))))
+           ("C-c c B" . counsel-bookmarked-directory)
+           ("C-c c F" . counsel-faces)
+           ("C-c c L" . counsel-load-library)
+           ("C-c c K" . counsel-ace-link)
+           ("C-c c O" . counsel-find-file-extern)
+           ("C-c c P" . counsel-package)
+           ("C-c c R" . counsel-list-processes)
+           ("C-c c a" . counsel-apropos)
+           ("C-c c e" . counsel-colors-emacs)
+           ("C-c c f" . counsel-find-library)
+           ("C-c c g" . counsel-grep)
+           ("C-c c h" . counsel-command-history)
+           ("C-c c i" . counsel-git)
+           ("C-c c j" . counsel-git-grep)
+           ("C-c c l" . counsel-git-log)
+           ("C-c c m" . counsel-minibuffer-history)
+           ("C-c c o" . counsel-outline)
+           ("C-c c p" . counsel-pt)
+           ("C-c c r" . counsel-rg)
+           ("C-c c s" . counsel-ag)
+           ("C-c c t" . counsel-load-theme)
+           ("C-c c u" . counsel-unicode-char)
+           ("C-c c w" . counsel-colors-web)
+           ("C-c c v" . counsel-set-variable)
+           ("C-c c z" . counsel-fzf)
 
-  (defun fk/yank-pop-or-helm-show-kill-ring ()
-    "If called after a yank, call `yank-pop'. Otherwise, call
-`helm-show-kill-ring'."
-    (interactive)
-    (if (eq last-command 'yank)
-        (if (eq major-mode 'vterm-mode)
-            (vterm-yank-pop)
-          (yank-pop))
-      (helm-show-kill-ring))))
+           :map ivy-minibuffer-map
+           ("C-w" . ivy-yank-word)
+
+           :map counsel-find-file-map
+           ("C-h" . counsel-up-directory)
+
+           :map swiper-map
+           ("M-s" . swiper-isearch-toggle)
+           ("M-%" . swiper-query-replace)
+
+           :map isearch-mode-map
+           ("M-s" . swiper-isearch-toggle))
+    :hook ((after-init . ivy-mode)
+           (ivy-mode . counsel-mode))
+    :init
+    (setq enable-recursive-minibuffers t) ; Allow commands in minibuffers
+
+    (setq ivy-height 12
+          ivy-use-selectable-prompt t
+          ivy-use-virtual-buffers t    ; Enable bookmarks and recentf
+          ivy-fixed-height-minibuffer t
+          ivy-count-format "(%d/%d) "
+          ivy-ignore-buffers '("\\` " "\\`\\*tramp/" "\\`\\*xref" "\\`\\*helpful "
+                               "\\`\\*.+-posframe-buffer\\*")
+          ivy-on-del-error-function #'ignore
+          ivy-initial-inputs-alist nil)
+
+    ;; Better performance on Windows
+    (if (eq system-type 'windows-nt)
+      (setq ivy-dynamic-exhibit-delay-ms 200))
+
+    (setq swiper-action-recenter t)
+
+    (setq counsel-find-file-at-point t
+          counsel-preselect-current-file t
+          counsel-yank-pop-separator "\n────────\n")
+    (add-hook 'counsel-grep-post-action-hook #'recenter)
+
+    ;; Use the faster search tools
+    (when (executable-find "rg")
+      (setq counsel-grep-base-command "rg -S --no-heading --line-number --color never '%s' '%s'"))
+    (when (executable-find "fd")
+      (setq counsel-fzf-cmd
+            "fd --type f --hidden --follow --exclude .git --color never '%s'"))
+
+    :config
+    (with-no-warnings
+      ;; persist views
+      (with-eval-after-load 'savehist
+        (add-to-list 'savehist-additional-variables 'ivy-views))
+
+      ;; Highlight the selected item
+      (defun my-ivy-format-function (cands)
+        "Transform CANDS into a string for minibuffer."
+        (if (display-graphic-p)
+            (ivy-format-function-line cands)
+          (ivy-format-function-arrow cands)))
+      (setf (alist-get 't ivy-format-functions-alist) #'my-ivy-format-function)
+
+      ;; Pre-fill search keywords
+      ;; @see https://www.reddit.com/r/emacs/comments/b7g1px/withemacs_execute_commands_like_marty_mcfly/
+      (defvar my-ivy-fly-commands
+        '(query-replace-regexp
+          flush-lines keep-lines ivy-read
+          swiper swiper-backward swiper-all
+          swiper-isearch swiper-isearch-backward
+          lsp-ivy-workspace-symbol lsp-ivy-global-workspace-symbol
+          counsel-grep-or-swiper counsel-grep-or-swiper-backward
+          counsel-grep counsel-ack counsel-ag counsel-rg counsel-pt))
+
+      (defvar my-ivy-fly-back-commands
+        '(self-insert-command
+          ivy-forward-char ivy-delete-char delete-forward-char kill-word kill-sexp
+          end-of-line mwim-end-of-line mwim-end-of-code-or-line mwim-end-of-line-or-code
+          yank ivy-yank-word ivy-yank-char ivy-yank-symbol counsel-yank-pop))
+
+      (defvar-local my-ivy-fly--travel nil)
+      (defun my-ivy-fly-back-to-present ()
+        (cond ((and (memq last-command my-ivy-fly-commands)
+                    (equal (this-command-keys-vector) (kbd "M-p")))
+               ;; repeat one time to get straight to the first history item
+               (setq unread-command-events
+                     (append unread-command-events
+                             (listify-key-sequence (kbd "M-p")))))
+              ((or (memq this-command my-ivy-fly-back-commands)
+                   (equal (this-command-keys-vector) (kbd "M-n")))
+               (unless my-ivy-fly--travel
+                 (delete-region (point) (point-max))
+                 (when (memq this-command '(ivy-forward-char
+                                            ivy-delete-char delete-forward-char
+                                            kill-word kill-sexp
+                                            end-of-line mwim-end-of-line
+                                            mwim-end-of-code-or-line
+                                            mwim-end-of-line-or-code))
+                   (insert (ivy-cleanup-string ivy-text))
+                   (when (memq this-command '(ivy-delete-char
+                                              delete-forward-char
+                                              kill-word kill-sexp))
+                     (beginning-of-line)))))))
+
+      (defun my-ivy-fly-time-travel ()
+        (when (memq this-command my-ivy-fly-commands)
+          (insert (propertize
+                   (save-excursion
+                     (set-buffer (window-buffer (minibuffer-selected-window)))
+                     (ivy-thing-at-point))
+                   'face 'shadow))
+          (add-hook 'pre-command-hook 'my-ivy-fly-back-to-present nil t)
+          (beginning-of-line)))
+
+      (add-hook 'minibuffer-setup-hook #'my-ivy-fly-time-travel)
+      (add-hook 'minibuffer-exit-hook
+                (lambda ()
+                  (remove-hook 'pre-command-hook 'my-ivy-fly-back-to-present t)))
+
+      ;;
+      ;; Improve search experience of `swiper' and `counsel'
+      ;;
+      (defun my-ivy-switch-to-swiper (&rest _)
+        "Switch to `swiper' with the current input."
+        (swiper ivy-text))
+
+      (defun my-ivy-switch-to-swiper-isearch (&rest _)
+        "Switch to `swiper-isearch' with the current input."
+        (swiper-isearch ivy-text))
+
+      (defun my-ivy-switch-to-swiper-all (&rest _)
+        "Switch to `swiper-all' with the current input."
+        (swiper-all ivy-text))
+
+      (defun my-ivy-switch-to-rg-dwim (&rest _)
+        "Switch to `rg-dwim' with the current input."
+        (ivy-quit-and-run
+          (rg-dwim default-directory)))
+
+      (defun my-ivy-switch-to-counsel-rg (&rest _)
+        "Switch to `counsel-rg' with the current input."
+        (counsel-rg ivy-text default-directory))
+
+      (defun my-ivy-switch-to-counsel-git-grep (&rest _)
+        "Switch to `counsel-git-grep' with the current input."
+        (counsel-git-grep ivy-text default-directory))
+
+      (defun my-ivy-switch-to-counsel-find-file (&rest _)
+        "Switch to `counsel-find-file' with the current input."
+        (counsel-find-file ivy-text))
+
+      (defun my-ivy-switch-to-counsel-fzf (&rest _)
+        "Switch to `counsel-fzf' with the current input."
+        (counsel-fzf ivy-text default-directory))
+
+      (defun my-ivy-switch-to-counsel-git (&rest _)
+        "Switch to `counsel-git' with the current input."
+        (counsel-git ivy-text))
+
+      (defun my-ivy-copy-library-path (lib)
+        "Copy the full path of LIB."
+        (let ((path (find-library-name lib)))
+          (kill-new path)
+          (message "Copied path: \"%s\"." path)))
+
+      ;; @see https://emacs-china.org/t/swiper-swiper-isearch/9007/12
+      (defun my-swiper-toggle-counsel-rg ()
+        "Toggle `counsel-rg' and `swiper'/`swiper-isearch' with the current input."
+        (interactive)
+        (ivy-quit-and-run
+          (if (memq (ivy-state-caller ivy-last) '(swiper swiper-isearch))
+              (my-ivy-switch-to-counsel-rg)
+            (my-ivy-switch-to-swiper-isearch))))
+      (bind-key "<C-return>" #'my-swiper-toggle-counsel-rg swiper-map)
+      (bind-key "<C-return>" #'my-swiper-toggle-counsel-rg counsel-ag-map)
+
+      (with-eval-after-load 'rg
+        (defun my-swiper-toggle-rg-dwim ()
+          "Toggle `rg-dwim' with the current input."
+          (interactive)
+          (ivy-quit-and-run
+            (rg-dwim default-directory)))
+        (bind-key "<M-return>" #'my-swiper-toggle-rg-dwim swiper-map)
+        (bind-key "<M-return>" #'my-swiper-toggle-rg-dwim counsel-ag-map))
+
+      (defun my-swiper-toggle-swiper-isearch ()
+        "Toggle `swiper' and `swiper-isearch' with the current input."
+        (interactive)
+        (ivy-quit-and-run
+          (if (eq (ivy-state-caller ivy-last) 'swiper-isearch)
+              (swiper ivy-text)
+            (swiper-isearch ivy-text))))
+      (bind-key "<s-return>" #'my-swiper-toggle-swiper-isearch swiper-map)
+
+      (defun my-counsel-find-file-toggle-fzf ()
+        "Toggle `counsel-fzf' with the current `counsel-find-file' input."
+        (interactive)
+        (ivy-quit-and-run
+          (counsel-fzf (or ivy-text "") default-directory)))
+      (bind-key "<C-return>" #'my-counsel-find-file-toggle-fzf counsel-find-file-map)
+
+      ;; More actions
+      (ivy-add-actions
+       #'swiper-isearch
+       '(("r" my-ivy-switch-to-counsel-rg "rg")
+         ("d" my-ivy-switch-to-rg-dwim "rg dwim")
+         ("s" my-ivy-switch-to-swiper "swiper")
+         ("a" my-ivy-switch-to-swiper-all "swiper all")))
+
+      (ivy-add-actions
+       #'swiper
+       '(("r" my-ivy-switch-to-counsel-rg "rg")
+         ("d" my-ivy-switch-to-rg-dwim "rg dwim")
+         ("s" my-ivy-switch-to-swiper-isearch "swiper isearch")
+         ("a" my-ivy-switch-to-swiper-all "swiper all")))
+
+      (ivy-add-actions
+       #'swiper-all
+       '(("g" my-ivy-switch-to-counsel-git-grep "git grep")
+         ("r" my-ivy-switch-to-counsel-rg "rg")
+         ("d" my-ivy-switch-to-rg-dwim "rg dwim")
+         ("s" my-swiper-toggle-swiper-isearch "swiper isearch")
+         ("S" my-ivy-switch-to-swiper "swiper")))
+
+      (ivy-add-actions
+       #'counsel-rg
+       '(("s" my-ivy-switch-to-swiper-isearch "swiper isearch")
+         ("S" my-ivy-switch-to-swiper "swiper")
+         ("a" my-ivy-switch-to-swiper-all "swiper all")
+         ("d" my-ivy-switch-to-rg-dwim "rg dwim")))
+
+      (ivy-add-actions
+       #'counsel-git-grep
+       '(("s" my-ivy-switch-to-swiper-isearch "swiper isearch")
+         ("S" my-ivy-switch-to-swiper "swiper")
+         ("r" my-ivy-switch-to-rg-dwim "rg")
+         ("d" my-ivy-switch-to-rg-dwim "rg dwim")
+         ("a" my-ivy-switch-to-swiper-all "swiper all")))
+
+      (ivy-add-actions
+       #'counsel-find-file
+       '(("g" my-ivy-switch-to-counsel-git "git")
+         ("z" my-ivy-switch-to-counsel-fzf "fzf")))
+
+      (ivy-add-actions
+       #'counsel-git
+       '(("f" my-ivy-switch-to-counsel-find-file "find file")
+         ("z" my-ivy-switch-to-counsel-fzf "fzf")))
+
+      (ivy-add-actions
+       'counsel-fzf
+       '(("f" my-ivy-switch-to-counsel-find-file "find file")
+         ("g" my-ivy-switch-to-counsel-git "git")))
+
+      (ivy-add-actions
+       'counsel-find-library
+       '(("p" my-ivy-copy-library-path "copy path")))
+
+      (ivy-add-actions
+       'counsel-load-library
+       '(("p" my-ivy-copy-library-path "copy path"))))
+
+    ;; Enhance M-x
+    (use-package amx
+      :init (setq amx-history-length 20))
+
+    ;; Better sorting and filtering
+    (use-package prescient
+      :commands prescient-persist-mode
+      :init (prescient-persist-mode 1))
+
+    (use-package ivy-prescient
+      :commands ivy-prescient-re-builder
+      :custom-face
+      (ivy-minibuffer-match-face-1 ((t (:foreground ,(face-foreground 'font-lock-doc-face nil t)))))
+      :init
+      (defun ivy-prescient-non-fuzzy (str)
+        "Generate an Ivy-formatted non-fuzzy regexp list for the given STR.
+  This is for use in `ivy-re-builders-alist'."
+        (let ((prescient-filter-method '(literal regexp)))
+          (ivy-prescient-re-builder str)))
+
+      (setq ivy-prescient-retain-classic-highlighting t
+            ivy-re-builders-alist
+            '((counsel-ag . ivy-prescient-non-fuzzy)
+              (counsel-rg . ivy-prescient-non-fuzzy)
+              (counsel-pt . ivy-prescient-non-fuzzy)
+              (counsel-grep . ivy-prescient-non-fuzzy)
+              (counsel-fzf . ivy-prescient-non-fuzzy)
+              (counsel-imenu . ivy-prescient-non-fuzzy)
+              (counsel-yank-pop . ivy-prescient-non-fuzzy)
+              (swiper . ivy-prescient-non-fuzzy)
+              (swiper-isearch . ivy-prescient-non-fuzzy)
+              (swiper-all . ivy-prescient-non-fuzzy)
+              (lsp-ivy-workspace-symbol . ivy-prescient-non-fuzzy)
+              (lsp-ivy-global-workspace-symbol . ivy-prescient-non-fuzzy)
+              (insert-char . ivy-prescient-non-fuzzy)
+              (counsel-unicode-char . ivy-prescient-non-fuzzy)
+              (t . ivy-prescient-re-builder))
+            ivy-prescient-sort-commands
+            '(counsel-M-x execute-extended-command execute-extended-command-for-buffer))
+
+      (ivy-prescient-mode 1))
+
+    ;; Additional key bindings for Ivy
+    (use-package ivy-hydra
+      :init
+      (setq ivy-read-action-function 'ivy-hydra-read-action))
+
+    ;; Ivy integration for Projectile
+    (use-package counsel-projectile
+      :hook (counsel-mode . counsel-projectile-mode)
+      :init (setq counsel-projectile-grep-initial-input '(ivy-thing-at-point)))
+   )
 #+END_SRC
-
 ** Company (Code & Text Completion)
 http://company-mode.github.io/
 #+BEGIN_SRC emacs-lisp
@@ -882,7 +1174,6 @@ https://github.com/abo-abo/hydra
 ** Recentf (Recent Files)
 #+BEGIN_SRC emacs-lisp
 (use-package recentf
-  ;; Use with `helm-recentf'
   :straight (:type built-in)
   :custom
   (recentf-exclude `(,(straight--build-dir)
@@ -890,28 +1181,6 @@ https://github.com/abo-abo/hydra
                      ,(expand-file-name "~/.virtualenvs")))
   (recentf-max-menu-items 25)
   (recentf-max-saved-items 200))
-#+END_SRC
-
-** Helm Projectile
-#+BEGIN_SRC emacs-lisp
-(use-package helm-projectile
-  :custom
-  (helm-projectile-sources-list '(helm-source-projectile-buffers-list
-                                  helm-source-projectile-recentf-list
-                                  helm-source-projectile-files-list
-                                  helm-source-projectile-projects))
-  :bind
-  ("C-x f" . helm-projectile)
-  :hook
-  (projectile-mode . helm-projectile-on)
-  :config
-  (defun fk/projectile-recentf-files-first-five (original-function)
-    "Return a list of five recently visited files in a project."
-    (let ((files (funcall original-function)))
-      (if (> (length files) 5)
-          (seq-subseq files 0 5)
-        files)))
-  (advice-add 'projectile-recentf-files :around 'fk/projectile-recentf-files-first-five))
 #+END_SRC
 
 ** Ace Jump
@@ -926,20 +1195,6 @@ https://github.com/abo-abo/ace-window
 (use-package ace-window
   :bind ("C-x o" . ace-window))
 #+END_SRC
-
-*** Dependents
-Those packages should load after ace-window to not install ace-window
-from melpa. TODO: fix this
-**** Helm Icons
-#+BEGIN_SRC emacs-lisp
-(use-package helm-icons
-  :straight (:host github :repo "yyoncho/helm-icons")
-  :after helm
-  :config
-  (treemacs-resize-icons fk/default-icon-size)
-  (helm-icons-enable))
-#+END_SRC
-
 * Text Editing
 ** Better Defaults
 #+BEGIN_SRC emacs-lisp
@@ -1005,6 +1260,7 @@ https://docs.projectile.mx/ Projectile is a project interaction library
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :custom
+  (projectile-completion-system 'ivy)
   (projectile-indexing-method 'alien)
   (add-to-list 'projectile-globally-ignored-directories "^\\.venv$")
   (projectile-auto-discover nil)
@@ -1033,6 +1289,24 @@ https://www.flycheck.org/en/latest/
 #+END_SRC
 
 ** Python
+** Debugger
+Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
+Dap for Python requires dap mode also need ~pip install debugpy~
+#+BEGIN_SRC emacs-lisp
+(use-package dap-mode
+  :init
+  (add-hook 'dap-stopped-hook
+          (lambda (arg) (call-interactively #'dap-hydra)))
+  :custom
+  (lsp-enable-dap-auto-configure nil)
+  :hook
+  (python-mode . (lambda () (require 'dap-python)))
+  :config
+  (dap-ui-mode 1)
+  ;; we use hydra, these dont work anyway
+  (dap-ui-controls-mode -1)
+  :commands dap-debug)
+#+END_SRC
 * Tools
 ** Dired
 In split copy command copies files automatically to other window
@@ -1095,6 +1369,11 @@ _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^        
     ("q" quit-window "quit" :color blue)
     ("." nil "toggle hydra" :color blue))
   (define-key dired-mode-map "." 'hydra-dired/body))
+#+END_SRC
+*** Dired Icons
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
 #+END_SRC
 ** IBuffer
 Add hydra to ibuffer
@@ -1202,3 +1481,9 @@ https://github.com/abo-abo/hydra/wiki/Ibuffer
   :commands magit-status)
 #+END_SRC
 ** Org
+* Potential new packages
+The following packages may be interesting
+
+A potential replacement for [[#helm][Helm]]?
+- https://github.com/abo-abo/swiper
+- https://github.com/oantolin/icomplete-vertical
