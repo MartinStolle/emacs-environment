@@ -1534,6 +1534,11 @@ Mostly taken from https://gist.github.com/jav-solo/d8a0805c04a5fcb90e1fdbc7ba8fb
             "\n"
             eshell-prompt-string))
 
+  (esh-section esh-git
+               (all-the-icons-alltheicon "git")
+               (vc-git--run-command-string nil "branch" "--show-current")
+               '(:foreground "pink"))
+
   (esh-section esh-dir
                nil
                (abbreviate-file-name (eshell/pwd))
@@ -1559,7 +1564,7 @@ Mostly taken from https://gist.github.com/jav-solo/d8a0805c04a5fcb90e1fdbc7ba8fb
   (setq eshell-prompt-string "└─>")
 
   ;; Choose which eshell-funcs to enable
-  (setq eshell-funcs (list esh-dir esh-clock))
+  (setq eshell-funcs (list esh-dir esh-clock esh-git))
 
   ;; Enable the new eshell prompt
   (setq eshell-prompt-function 'esh-prompt-func))
