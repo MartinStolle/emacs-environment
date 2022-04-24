@@ -575,6 +575,7 @@ https://github.com/emacs-dashboard/emacs-dashboard
   (dashboard-set-heading-icons t)
   (dashboard-set-file-icons t)
   (dashboard-center-content t)
+  (dashboard-projects-switch-function 'counsel-projectile-switch-project-by-name)
   (dashboard-item-shortcuts '((recents . "r")
                               (bookmarks . "b")
                               (projects . "p")
@@ -1248,7 +1249,15 @@ https://docs.projectile.mx/ Projectile is a project interaction library
   :hook
   (dashboard-after-initialize . projectile-mode))
 #+END_SRC
-
+**** Counsel for Projectile
+Counsel-projectile defines replacements for existing projectile commands as well as new commands that have no projectile counterparts
+https://github.com/ericdanan/counsel-projectile
+#+BEGIN_SRC emacs-lisp
+(use-package counsel-projectile
+ :after projectile
+ :config
+ (counsel-projectile-mode 1))
+#+END_SRC
 *** YASnippet-snippets
 https://github.com/AndreaCrotti/yasnippet-snippets
 #+BEGIN_SRC emacs-lisp
