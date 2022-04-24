@@ -1260,6 +1260,11 @@ https://docs.projectile.mx/ Projectile is a project interaction library
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :custom
+  ;; setting them to nil, because windows has no tr command
+  (projectile-git-submodule-command nil)
+  (projectile-fossil-command nil)
+  (projectile-pijul-command nil)
+  (projectile-svn-command nil)
   (projectile-completion-system 'ivy)
   (projectile-indexing-method 'alien)
   (add-to-list 'projectile-globally-ignored-directories "^\\.venv$")
@@ -1282,13 +1287,49 @@ https://github.com/AndreaCrotti/yasnippet-snippets
 
 *** Flycheck
 https://www.flycheck.org/en/latest/
+
+Run ~M-x flycheck-verify-setup~ to check the installation.
+
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
-  :init
-  (global-flycheck-mode))
+  :diminish
+  :commands flycheck-redefine-standard-error-levels
+  :hook (after-init . global-flycheck-mode)
+  :init (setq flycheck-global-modes
+              '(not text-mode outline-mode fundamental-mode lisp-interaction-mode
+                    org-mode diff-mode shell-mode eshell-mode term-mode vterm-mode)
+              flycheck-emacs-lisp-load-path 'inherit
+              flycheck-indication-mode (if (display-graphic-p)
+                                           'right-fringe
+                                         'right-margin)
+              ;; Only check while saving and opening files
+              flycheck-check-syntax-automatically '(save mode-enabled))
+)
 #+END_SRC
 
 ** Python
+Install python packages with ~pip install -r requirements.txt~
+
+#+BEGIN_SRC emacs-lisp
+(use-package python
+  :ensure nil
+  :hook (inferior-python-mode . (lambda ()
+                                  (process-query-on-exit-flag
+                                   (get-process "python"))))
+  :init
+  ;; Disable readline based native completion
+  (setq python-shell-completion-native-enable nil)
+  :config
+  ;; Default to Python
+  ;; if you are using windows python3 will be the windows default non working python
+  (setq python-shell-interpreter "python")
+  (setq flycheck-python-pycompile-executable "python")
+  (setq flycheck-python-flake8-executable "flake8")
+  (setq flycheck-python-mypy-executable "mypy")
+  ;; Env vars
+  (with-eval-after-load 'exec-path-from-shell
+    (exec-path-from-shell-copy-env "PYTHONPATH")))
+#+END_SRC
 ** Debugger
 Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
 Dap for Python requires dap mode also need ~pip install debugpy~
@@ -1483,7 +1524,3 @@ https://github.com/abo-abo/hydra/wiki/Ibuffer
 ** Org
 * Potential new packages
 The following packages may be interesting
-
-A potential replacement for [[#helm][Helm]]?
-- https://github.com/abo-abo/swiper
-- https://github.com/oantolin/icomplete-vertical
