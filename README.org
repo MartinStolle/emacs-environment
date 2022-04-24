@@ -424,46 +424,6 @@ which is generally not intended to be edited."
 (setq-default mode-line-format nil)
 #+END_SRC
 
-** Good Scroll (Smooth scrolling)
-#+BEGIN_SRC emacs-lisp
-(use-package good-scroll
-  :straight (:host github :repo "io12/good-scroll.el")
-  :commands good-scroll-mode
-  :custom
-  (good-scroll-duration 0.2)
-  (good-scroll-point-jump 4)
-  ;; :bind
-  ;; ("C-v" . fk/smooth-scroll-up)
-  ;; ("M-v" . fk/smooth-scroll-down)
-  ;; ("C-l" . fk/smooth-recenter-top-bottom)
-  ;; :hook
-  ;; (dashboard-after-initialize . good-scroll-mode)
-  :config
-  (defun fk/smooth-scroll-down (&optional pixels)
-    "Smooth alternative of M-v `scroll-down-command'."
-    (interactive)
-    (let ((good-scroll-step (or pixels 300)))
-      (good-scroll-down)))
-
-  (defun fk/smooth-scroll-up (&optional pixels)
-    "Smooth alternative of C-v `scroll-up-command'."
-    (interactive)
-    (let ((good-scroll-step (or pixels 300)))
-      (good-scroll-up)))
-
-  (defun fk/smooth-recenter-top-bottom ()
-    "docstring"
-    (interactive)
-    (let* ((current-row (cdr (nth 6 (posn-at-point))))
-           (target-row (save-window-excursion
-                         (recenter-top-bottom)
-                         (cdr (nth 6 (posn-at-point)))))
-           (distance-in-pixels (* (- target-row current-row) (line-pixel-height)))
-           (good-scroll-step distance-in-pixels))
-      (when (not (zerop distance-in-pixels))
-        (good-scroll--update -1)))))
-#+END_SRC
-
 ** Window Dividers
 Change default window dividers to a better built-in alternative.
 (Note: ":tangle early-init.el")
@@ -493,6 +453,7 @@ Change default window dividers to a better built-in alternative.
 
 ** Theme
 *** Theme
+https://github.com/doomemacs/themes
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
   :config
@@ -523,6 +484,8 @@ Change default window dividers to a better built-in alternative.
 
 ** Mode Line
 *** Doom Modeline
+A fancy and fast mode-line inspired by minimalism design.
+https://seagle0128.github.io/doom-modeline/
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
   :init
@@ -540,12 +503,17 @@ Change default window dividers to a better built-in alternative.
 #+END_SRC
 
 *** Anzu
+anzu.el provides a minor mode which displays current match and total matches information in the mode-line in various search modes.
+https://github.com/emacsorphanage/anzu
 #+BEGIN_SRC emacs-lisp
 (use-package anzu
   :hook
   (dashboard-after-initialize . global-anzu-mode))
 #+END_SRC
 ** Beacon
+Never lose your cursor again
+https://github.com/Malabarba/beacon
+
 #+BEGIN_SRC emacs-lisp
 (use-package beacon
   ;; :preface
@@ -1412,6 +1380,8 @@ _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^        
   (define-key dired-mode-map "." 'hydra-dired/body))
 #+END_SRC
 *** Dired Icons
+Adds icons to dired mode
+https://github.com/jtbm37/all-the-icons-dired
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
@@ -1522,5 +1492,85 @@ https://github.com/abo-abo/hydra/wiki/Ibuffer
   :commands magit-status)
 #+END_SRC
 ** Org
+** EShell
+Default emacs shell with some updated styling.
+Mostly taken from https://gist.github.com/jav-solo/d8a0805c04a5fcb90e1fdbc7ba8fbaa2
+#+BEGIN_SRC emacs-lisp
+(use-package eshell
+  :straight (:type built-in)
+  :commands eshell
+  :defines eshell-prompt-function
+  :config
+  ;; Use 'prepend for the NS and Mac ports or Emacs will crash.
+  (set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'prepend)
+
+  (defmacro with-face (STR &rest PROPS)
+    "Return STR propertized with PROPS."
+    `(propertize ,STR 'face (list ,@PROPS)))
+
+  (defmacro esh-section (NAME ICON FORM &rest PROPS)
+    "Build eshell section NAME with ICON prepended to evaled FORM with PROPS."
+    `(setq ,NAME
+           (lambda () (when ,FORM
+                        (-> ,ICON
+                            (concat esh-section-delim ,FORM)
+                            (with-face ,@PROPS))))))
+
+  (defun esh-acc (acc x)
+    "Accumulator for evaluating and concatenating esh-sections."
+    (--if-let (funcall x)
+              (if (s-blank? acc)
+                  it
+                (concat acc esh-sep it))
+              acc))
+
+  (defun esh-prompt-func ()
+    "Build `eshell-prompt-function'"
+    (concat esh-header
+            (-reduce-from 'esh-acc "" eshell-funcs)
+            "\n"
+            eshell-prompt-string))
+
+  (esh-section esh-dir
+               nil
+               (abbreviate-file-name (eshell/pwd))
+               '(:foreground "gold"))
+
+  (esh-section esh-clock
+               (all-the-icons-alltheicon "terminal")
+               (format-time-string "%H:%M" (current-time))
+               '(:foreground "forest green"))
+
+  ;; Separator between esh-sections
+  (setq esh-sep " | ")
+
+  ;; Separator between an esh-section icon and form
+  (setq esh-section-delim " ")
+
+  ;; Eshell prompt header
+  (setq esh-header "\n┌─")
+
+  ;; Eshell prompt regexp and string. Unless you are varying the prompt by eg.
+  ;; your login, these can be the same.
+  (setq eshell-prompt-regexp "└─>")
+  (setq eshell-prompt-string "└─>")
+
+  ;; Choose which eshell-funcs to enable
+  (setq eshell-funcs (list esh-dir esh-clock))
+
+  ;; Enable the new eshell prompt
+  (setq eshell-prompt-function 'esh-prompt-func))
+#+END_SRC
+*** Syntax highlighting
+https://github.com/akreisher/eshell-syntax-highlighting
+
+#+BEGIN_SRC
+;; minor syntax highlighting for eshell
+(use-package eshell-syntax-highlighting
+  :after eshell-mode
+  :config
+  ;; Enable in all Eshell buffers.
+  (eshell-syntax-highlighting-global-mode +1))
+#+END_SRC
 * Potential new packages
 The following packages may be interesting
