@@ -1329,6 +1329,9 @@ Dap for Python requires dap mode also need ~pip install debugpy~
   :commands dap-debug)
 #+END_SRC
 * Tools
+** Environment Variables on Windows
+Add the usr path of git ~C:\Program Files\Git\usr\bin~ to PATH.
+Otherwise grep and the other great tools will be missed.
 ** Dired
 In split copy command copies files automatically to other window
 #+BEGIN_SRC emacs-lisp
@@ -1360,7 +1363,7 @@ _U_: unmark all          _C_: copy         _s_: toggle sort by date  _i_: view s
 _t_: toggle marks        _M_: chmod        _$_: summary              _$_: hide subdir ^ ^
 _t_: mark using regexp   _Z_: compress     _<_: undo                 ^ ^              ^ ^
 _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^              ^ ^
-^ ^                      _=_: diff         ^ ^                       ^ ^              ^ ^
+^ ^                      _=_: diff         _W_: open browser         ^ ^              ^ ^
 "
     ("m" dired-mark)
     ("u" dired-unmark)
@@ -1375,6 +1378,7 @@ _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^        
     ("D" dired-do-delete)
     ("M" dired-do-chmod)
     ("=" dired-diff)
+    ("W" browse-url-of-dired-file)
     ("(" dired-hide-details-mode)
     ("g" revert-buffer)
     ("s" dired-sort-toggle-or-edit)
@@ -1513,6 +1517,7 @@ Mostly taken from https://gist.github.com/jav-solo/d8a0805c04a5fcb90e1fdbc7ba8fb
   :commands eshell
   :defines eshell-prompt-function
   :config
+  (require 'subr-x)
   ;; Use 'prepend for the NS and Mac ports or Emacs will crash.
   (set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'prepend)
 
@@ -1545,7 +1550,7 @@ Mostly taken from https://gist.github.com/jav-solo/d8a0805c04a5fcb90e1fdbc7ba8fb
 
   (esh-section esh-git
                (all-the-icons-alltheicon "git")
-               (vc-git--run-command-string nil "branch" "--show-current")
+               (string-trim-right (vc-git--run-command-string nil "branch" "--show-current"))
                '(:foreground "pink"))
 
   (esh-section esh-dir
@@ -1588,6 +1593,42 @@ https://github.com/akreisher/eshell-syntax-highlighting
   :config
   ;; Enable in all Eshell buffers.
   (eshell-syntax-highlighting-global-mode +1))
+#+END_SRC
+* File Modes
+** JSON
+Major mode for editing json files 
+https://github.com/joshwnj/json-mode
+
+Added
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode
+  :mode ("\\.json\\'" . json-mode))
+#+END_SRC
+*** JSON navigator
+Hopefully makes it easier to navigate json files when using tree
+https://github.com/DamienCassou/json-navigator
+
+#+BEGIN_SRC emacs-lisp
+(use-package json-navigator
+  :commands json-navigator-navigate-region)
+#+END_SRC
+** YAML
+https://github.com/yoshiki/yaml-mode
+
+#+BEGIN_SRC emacs-lisp
+(use-package yaml-mode
+  :mode (("\\.yml\\'" . yaml-mode)
+         ("\\.yaml\\'" . yaml-mode))
+  :hook
+  (yaml-mode . highlight-indent-guides-mode)
+  (yaml-mode . display-line-numbers-mode))
+#+END_SRC
+** Jenkinsfile
+https://github.com/john2x/jenkinsfile-mode
+
+#+BEGIN_SRC emacs-lisp
+(use-package jenkinsfile-mode
+  :mode ("Jenkinsfile\\'" . jenkinsfile-mode-hook))
 #+END_SRC
 * Potential new packages
 The following packages may be interesting
