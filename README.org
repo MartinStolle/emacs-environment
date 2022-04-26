@@ -1215,6 +1215,23 @@ Highlights the matching pair when the point is over parentheses.
   (dashboard-after-initialize . show-paren-mode))
 #+END_SRC
 
+** Multiple Cursors
+Multiple cursors for Emacs, useful multiline edit.
+https://github.com/magnars/multiple-cursors.el
+
+See https://emacsrocks.com/e13.html for demo.
+
+#+BEGIN_SRC emacs-lisp
+(use-package multiple-cursors
+  :bind (("C-S-c C-S-c"   . mc/edit-lines)
+         ("C->"           . mc/mark-next-like-this)
+         ("C-<"           . mc/mark-previous-like-this)
+         ("C-c C-<"       . mc/mark-all-like-this)
+         ("C-M->"         . mc/skip-to-next-like-this)
+         ("C-M-<"         . mc/skip-to-previous-like-this)
+         :map mc/keymap
+         ("C-|" . mc/vertical-align-with-space)))
+#+END_SRC
 * Programming
 ** General
 *** Electric Indent Mode
@@ -1349,7 +1366,7 @@ In split copy command copies files automatically to other window
   ;; -p, --indicator-style=slash
   ;;        append / indicator to directories
   (dired-listing-switches "-lAhp --group-directories-first")
-  (setq dired-dwim-target t)
+  (dired-dwim-target t)
   :config
   ;; Dired in single buffer (prevent dired from opening a lot of buffers)
   (put 'dired-find-alternate-file 'disabled nil)
@@ -1626,9 +1643,10 @@ https://github.com/yoshiki/yaml-mode
 ** Jenkinsfile
 https://github.com/john2x/jenkinsfile-mode
 
-#+BEGIN_SRC emacs-lisp
-(use-package jenkinsfile-mode
-  :mode ("Jenkinsfile\\'" . jenkinsfile-mode-hook))
-#+END_SRC
+As long as the package is buggy
+# #+BEGIN_SRC emacs-lisp
+# (use-package jenkinsfile-mode
+#   :mode ("Jenkinsfile\\'" . jenkinsfile-mode-hook))
+# #+END_SRC
 * Potential new packages
 The following packages may be interesting
