@@ -1195,9 +1195,7 @@ https://gitlab.com/tsc25/undo-tree
 (use-package undo-tree
   :init
   ;; dont automatically save and restore undo-tree history along with buffer
-  (setq undo-tree-auto-save-history nil)
-  :custom
-  (undo-tree-visualizer-diff t)
+  (undo-tree-auto-save-history nil)
   :hook
   (dashboard-after-initialize . global-undo-tree-mode))
 #+END_SRC
@@ -1217,9 +1215,32 @@ Highlights the matching pair when the point is over parentheses.
 
 ** Multiple Cursors
 Multiple cursors for Emacs, useful multiline edit.
-https://github.com/magnars/multiple-cursors.el
+
+Source: https://github.com/magnars/multiple-cursors.el
 
 See https://emacsrocks.com/e13.html for demo.
+
+*** Command overview
+
+*Mark one more occurrence*
+
+- ~mc/mark-next-like-this~: Adds a cursor and region at the next part of the buffer forwards that matches the current region.
+- ~mc/mark-previous-like-this~: Adds a cursor and region at the next part of the buffer backwards that matches the current region.
+
+*Mark many occurrences*
+
+- ~mc/edit-lines~: Adds one cursor to each line in the current region.
+- ~mc/mark-all-like-this~: Marks all parts of the buffer that matches the current region.
+
+*Juggle around with the current cursors*
+
+- ~mc/skip-to-next-like-this~: Remove the cursor furthest down, marking the next occurrence down.
+- ~mc/skip-to-previous-like-this~: Remove the cursor furthest up, marking the next occurrence up.
+
+*Special*
+
+- ~mc/sort-regions~: Sort the marked regions alphabetically.
+- ~mc/vertical-align-with-space~: Aligns all cursors with whitespace like mc/vertical-align does.
 
 #+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
@@ -1229,6 +1250,7 @@ See https://emacsrocks.com/e13.html for demo.
          ("C-c C-<"       . mc/mark-all-like-this)
          ("C-M->"         . mc/skip-to-next-like-this)
          ("C-M-<"         . mc/skip-to-previous-like-this)
+         ("C-c C-r"       . mc/sort-regions)
          :map mc/keymap
          ("C-|" . mc/vertical-align-with-space)))
 #+END_SRC
