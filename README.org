@@ -1195,7 +1195,7 @@ https://gitlab.com/tsc25/undo-tree
 (use-package undo-tree
   :init
   ;; dont automatically save and restore undo-tree history along with buffer
-  (undo-tree-auto-save-history nil)
+  (setq undo-tree-auto-save-history nil)
   :hook
   (dashboard-after-initialize . global-undo-tree-mode))
 #+END_SRC
@@ -1672,3 +1672,13 @@ As long as the package is buggy
 # #+END_SRC
 * Potential new packages
 The following packages may be interesting
+
+* Errors
+
+Things to check if things somhow do not work:
+- remove config.el
+- remove early-init.el
+- check if it is the latest README.org
+- check if the tangle code is inside the init.el
+- rerun new Initialization
+- if package has an error, uncomment it first, restart initialization
