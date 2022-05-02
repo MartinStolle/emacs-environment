@@ -1169,12 +1169,14 @@ https://github.com/abo-abo/ace-window
 #+END_SRC
 * Text Editing
 ** Better Defaults
+The display-fill-column-indicator mode uses the variable ~fill-column~.
+
 #+BEGIN_SRC emacs-lisp
 (delete-selection-mode)
 (electric-pair-mode)
 
 (setq-default
- fill-column 80
+ fill-column 100
  sentence-end-double-space nil
  indent-tabs-mode nil  ; Use spaces instead of tabs
  tab-width 4)
