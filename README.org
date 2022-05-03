@@ -1351,6 +1351,13 @@ Install python packages with ~pip install -r requirements.txt~
   (with-eval-after-load 'exec-path-from-shell
     (exec-path-from-shell-copy-env "PYTHONPATH")))
 #+END_SRC
+** Groovy
+https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes
+
+#+BEGIN_SRC emacs-lisp
+(use-package groovy-mode
+  :mode "\\.groovy\\'")
+#+END_SRC
 ** Debugger
 Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
 Dap for Python requires dap mode also need ~pip install debugpy~
@@ -1667,11 +1674,10 @@ https://github.com/yoshiki/yaml-mode
 ** Jenkinsfile
 https://github.com/john2x/jenkinsfile-mode
 
-As long as the package is buggy
-# #+BEGIN_SRC emacs-lisp
-# (use-package jenkinsfile-mode
-#   :mode ("Jenkinsfile\\'" . jenkinsfile-mode-hook))
-# #+END_SRC
+#+BEGIN_SRC emacs-lisp
+(use-package jenkinsfile-mode
+  :mode "Jenkinsfile\\'")
+#+END_SRC
 * Potential new packages
 The following packages may be interesting
 
