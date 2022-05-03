@@ -665,6 +665,8 @@ https://github.com/abo-abo/swiper
 
 Taken from https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-ivy.el
 
+When in isearch use ~C-o~ to open the hydra.
+
 #+BEGIN_SRC emacs-lisp
   (use-package counsel
     :diminish ivy-mode counsel-mode
