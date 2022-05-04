@@ -402,6 +402,8 @@ which is generally not intended to be edited."
     (disable-theme theme)))
 #+END_SRC
 *** toggle-ui-elements
+See [[#highlight-indent-guides][Highlight Indent Guides]], [[#fill-column-indicator][Fill Column Indicator]] and [[#line-numbers][Line Numbers]]
+
 #+BEGIN_SRC emacs-lisp
 (defun fk/toggle-ui-elements (&optional arg)
   "Toggle `display-line-numbers-mode', `highlight-indent-guides-mode' and
@@ -410,8 +412,6 @@ which is generally not intended to be edited."
   (display-line-numbers-mode (or arg (if display-line-numbers-mode -1 1)))
   (highlight-indent-guides-mode (or arg (if highlight-indent-guides-mode -1 1)))
   (display-fill-column-indicator-mode (or arg (if display-fill-column-indicator-mode -1 1))))
-
-;; (add-hook 'prog-mode-hook (lambda () (fk/toggle-ui-elements -1)) 100)
 #+END_SRC
 
 ** Remove Redundant UI
@@ -455,9 +455,31 @@ Change default window dividers to a better built-in alternative.
 *** Theme
 https://github.com/doomemacs/themes
 #+BEGIN_SRC emacs-lisp
-(use-package doom-themes
-  :config
-  (load-theme 'doom-nord  t))
+  (use-package doom-themes
+    :config
+    (load-theme 'doom-nord  t)
+    (defconst fk/font-color (face-attribute 'default :foreground))
+    (defconst fk/background-color (face-attribute 'default :background))
+    (defconst fk/dark-color (doom-darken fk/background-color 0.15))
+    (defconst fk/dark-color1 (doom-darken fk/background-color 0.01))
+    (defconst fk/dark-color2 (doom-darken fk/background-color 0.02))
+    (defconst fk/dark-color3 (doom-darken fk/background-color 0.03))
+    (defconst fk/dark-color4 (doom-darken fk/background-color 0.04))
+    (defconst fk/dark-color5 (doom-darken fk/background-color 0.05))
+    (defconst fk/dark-color6 (doom-darken fk/background-color 0.06))
+    (defconst fk/dark-color7 (doom-darken fk/background-color 0.07))
+    (defconst fk/dark-color8 (doom-darken fk/background-color 0.08))
+    (defconst fk/dark-color9 (doom-darken fk/background-color 0.09))
+    (defconst fk/light-color (doom-lighten fk/background-color 0.15))
+    (defconst fk/light-color1 (doom-lighten fk/background-color 0.09))
+    (defconst fk/light-color2 (doom-lighten fk/background-color 0.08))
+    (defconst fk/light-color3 (doom-lighten fk/background-color 0.07))
+    (defconst fk/light-color4 (doom-lighten fk/background-color 0.06))
+    (defconst fk/light-color5 (doom-lighten fk/background-color 0.05))
+    (defconst fk/light-color6 (doom-lighten fk/background-color 0.04))
+    (defconst fk/light-color7 (doom-lighten fk/background-color 0.03))
+    (defconst fk/light-color8 (doom-lighten fk/background-color 0.02))
+    (defconst fk/light-color9 (doom-lighten fk/background-color 0.01)))
 #+END_SRC
 
 *** Settings
@@ -604,6 +626,30 @@ https://github.com/emacs-dashboard/emacs-dashboard
       (dashboard-refresh-buffer))))
 #+END_SRC
 
+** Line Numbers
+#+BEGIN_SRC emacs-lisp
+(use-package display-line-numbers
+  :straight (:type built-in)
+  :custom-face
+  (line-number ((t (:foreground ,fk/light-color2))))
+  (line-number-current-line ((t (:foreground ,fk/light-color))))
+  :hook
+  (prog-mode . display-line-numbers-mode))
+#+END_SRC
+** Highlight Indent Guides
+https://github.com/DarthFennec/highlight-indent-guides
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-indent-guides
+  :custom
+  (highlight-indent-guides-method 'character)
+  (highlight-indent-guides-responsive 'top)
+  (highlight-indent-guides-auto-enabled nil)
+  :custom-face
+  (highlight-indent-guides-character-face ((t (:foreground ,fk/light-color7))))
+  (highlight-indent-guides-top-character-face ((t (:foreground ,fk/light-color5))))
+  :hook
+  (prog-mode . highlight-indent-guides-mode))
+#+END_SRC
 ** Fill Column Indicator
 #+BEGIN_SRC emacs-lisp
 (use-package display-fill-column-indicator
