@@ -628,13 +628,12 @@ https://github.com/emacs-dashboard/emacs-dashboard
 
 ** Line Numbers
 #+BEGIN_SRC emacs-lisp
-(use-package display-line-numbers
-  :straight (:type built-in)
-  :custom-face
-  (line-number ((t (:foreground ,fk/light-color2))))
-  (line-number-current-line ((t (:foreground ,fk/light-color))))
-  :hook
-  (prog-mode . display-line-numbers-mode))
+  (use-package display-line-numbers
+    :straight (:type built-in)
+    :custom-face
+    (line-number ((t (:foreground ,fk/light-color2))))
+    (line-number-current-line ((t (:foreground ,fk/light-color))))
+    :hook ((yaml-mode json-mode jenkinsfile-mode) . display-line-numbers-mode))
 #+END_SRC
 ** Highlight Indent Guides
 https://github.com/DarthFennec/highlight-indent-guides
@@ -1380,24 +1379,25 @@ Run ~M-x flycheck-verify-setup~ to check the installation.
 Install python packages with ~pip install -r requirements.txt~
 
 #+BEGIN_SRC emacs-lisp
-(use-package python
-  :ensure nil
-  :hook (inferior-python-mode . (lambda ()
-                                  (process-query-on-exit-flag
-                                   (get-process "python"))))
-  :init
-  ;; Disable readline based native completion
-  (setq python-shell-completion-native-enable nil)
-  :config
-  ;; Default to Python
-  ;; if you are using windows python3 will be the windows default non working python
-  (setq python-shell-interpreter "python")
-  (setq flycheck-python-pycompile-executable "python")
-  (setq flycheck-python-flake8-executable "flake8")
-  (setq flycheck-python-mypy-executable "mypy")
-  ;; Env vars
-  (with-eval-after-load 'exec-path-from-shell
-    (exec-path-from-shell-copy-env "PYTHONPATH")))
+  (use-package python
+    :ensure nil
+    :custom
+    :hook (inferior-python-mode . (lambda ()
+                                    (process-query-on-exit-flag
+                                     (get-process "python"))))
+    :init
+    ;; Disable readline based native completion
+    (setq python-shell-completion-native-enable nil)
+    :config
+    ;; Default to Python
+    ;; if you are using windows python3 will be the windows default non working python
+    (setq python-shell-interpreter "python")
+    (setq flycheck-python-pycompile-executable "python")
+    (setq flycheck-python-flake8-executable "flake8")
+    (setq flycheck-python-mypy-executable "mypy")
+    ;; Env vars
+    (with-eval-after-load 'exec-path-from-shell
+      (exec-path-from-shell-copy-env "PYTHONPATH")))
 #+END_SRC
 ** Groovy
 https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes
