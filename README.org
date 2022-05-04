@@ -1738,3 +1738,6 @@ Things to check if things somhow do not work:
 - check if the tangle code is inside the init.el
 - rerun new Initialization
 - if package has an error, uncomment it first, restart initialization
+
+groovy without flycheck, some weird behaviour.
+Mode is stuck loading when groovy executable is in PATH.
