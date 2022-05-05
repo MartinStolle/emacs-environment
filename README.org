@@ -633,7 +633,7 @@ https://github.com/emacs-dashboard/emacs-dashboard
     :custom-face
     (line-number ((t (:foreground ,fk/light-color2))))
     (line-number-current-line ((t (:foreground ,fk/light-color))))
-    :hook ((yaml-mode json-mode jenkinsfile-mode) . display-line-numbers-mode))
+    :hook ((yaml-mode json-mode jenkinsfile-mode conf-mode) . display-line-numbers-mode))
 #+END_SRC
 ** Highlight Indent Guides
 https://github.com/DarthFennec/highlight-indent-guides
