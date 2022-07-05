@@ -1454,7 +1454,7 @@ In split copy command copies files automatically to other window
 ^^^^^^^------------------------------------------------------------------------------------------------
 _m_: mark                _+_: create dir   _(_: hide details         _p_: up dir      _S_: search files
 _u_: unmark              _R_: rename       _g_: Refresh buffer       _n_: down dir    _I_: search content
-_U_: unmark all          _C_: copy         _s_: toggle sort by date  _i_: view subdir ^ ^
+_U_: unmark all          _C_: copy         _s_: toggle sort by date  _i_: view subdir _Q_: find and replace
 _t_: toggle marks        _M_: chmod        _$_: summary              _$_: hide subdir ^ ^
 _t_: mark using regexp   _Z_: compress     _<_: undo                 ^ ^              ^ ^
 _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^              ^ ^
