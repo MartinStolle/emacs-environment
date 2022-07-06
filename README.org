@@ -1598,6 +1598,14 @@ https://github.com/abo-abo/hydra/wiki/Ibuffer
   (define-key ibuffer-mode-map "." 'hydra-ibuffer-main/body))
 #+END_SRC
 ** Version Control
+*** Generating Information
+
+Setup emacs to use as default editor in git for Windows
+
+#+BEGIN_SRC bat
+git config --global core.editor "'c:\\Program Files\\Emacs\\bin\\emacsclientw.exe' --alternate-editor='c:/Program Files/Emacs/bin/runemacs.exe' -c"
+#+END_SRC
+
 *** Magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit
