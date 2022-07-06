@@ -1,8 +1,35 @@
+# Backup files
+backups/
 # Compiled
 *.elc
 
 # Packaging
 .cask
+straight/
+
+
+# ===================
+# Various emacs files
+# ===================
+server/
+transient/
+var/
+eshell/
+
+bookmarks
+places
+recentf
+ido.last
+
+projectile-bookmarks.eld
+projectile.cache
+
+.dap-breakpoints
+.lsp-session-v1
+
+config.el
+custom/init-dap.el
+early-init.el
 
 # =========================
 # Operating System Files

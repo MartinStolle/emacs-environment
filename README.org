@@ -1430,65 +1430,66 @@ Otherwise grep and the other great tools will be missed.
 ** Dired
 In split copy command copies files automatically to other window
 #+BEGIN_SRC emacs-lisp
-(use-package dired
-  :straight (:type built-in)
-  :commands (dired dired-jump)
-  :bind (("C-x C-j" . dired-jump))
-  :custom
-  ;; ls parameters:
-  ;; -l     use a long listing format
-  ;; -A, --almost-all
-  ;;        do not list implied . and ..
-  ;; -h, --human-readable
-  ;;        with -l and -s, print sizes like 1K 234M 2G etc.
-  ;; -p, --indicator-style=slash
-  ;;        append / indicator to directories
-  (dired-listing-switches "-lAhp --group-directories-first")
-  (dired-dwim-target t)
-  :config
-  ;; Dired in single buffer (prevent dired from opening a lot of buffers)
-  (put 'dired-find-alternate-file 'disabled nil)
-  (defhydra hydra-dired (:hint nil :color pink)
-    "
-^Mark^                   ^Actions^         ^Control^                 ^Movement^       ^Search^
-^^^^^^^------------------------------------------------------------------------------------------------
-_m_: mark                _+_: create dir   _(_: hide details         _p_: up dir      _S_: search files
-_u_: unmark              _R_: rename       _g_: Refresh buffer       _n_: down dir    _I_: search content
-_U_: unmark all          _C_: copy         _s_: toggle sort by date  _i_: view subdir _Q_: find and replace
-_t_: toggle marks        _M_: chmod        _$_: summary              _$_: hide subdir ^ ^
-_t_: mark using regexp   _Z_: compress     _<_: undo                 ^ ^              ^ ^
-_/_: mark all dirs       _D_: delete       _v_: view                 ^ ^              ^ ^
-^ ^                      _=_: diff         _W_: open browser         ^ ^              ^ ^
-"
-    ("m" dired-mark)
-    ("u" dired-unmark)
-    ("U" dired-unmark-all-marks)
-    ("t" dired-toggle-marks)
-    ("E" dired-mark-files-regexp)
-    ("/" dired-mark-directories)
-    ("+" dired-create-directory)
-    ("R" dired-do-rename)
-    ("C" dired-do-copy)
-    ("Z" dired-do-compress)
-    ("D" dired-do-delete)
-    ("M" dired-do-chmod)
-    ("=" dired-diff)
-    ("W" browse-url-of-dired-file)
-    ("(" dired-hide-details-mode)
-    ("g" revert-buffer)
-    ("s" dired-sort-toggle-or-edit)
-    ("?" dired-summary)
-    ("<" dired-undo)
-    ("v" dired-view-file)
-    ("p" dired-tree-up)
-    ("n" dired-tree-down)
-    ("i" dired-maybe-insert-subdir)
-    ("$" dired-hide-subdir)
-    ("S" dired-isearch-filenames)
-    ("I" dired-do-isearch)
-    ("q" quit-window "quit" :color blue)
-    ("." nil "toggle hydra" :color blue))
-  (define-key dired-mode-map "." 'hydra-dired/body))
+  (use-package dired
+    :straight (:type built-in)
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom
+    ;; ls parameters:
+    ;; -l     use a long listing format
+    ;; -A, --almost-all
+    ;;        do not list implied . and ..
+    ;; -h, --human-readable
+    ;;        with -l and -s, print sizes like 1K 234M 2G etc.
+    ;; -p, --indicator-style=slash
+    ;;        append / indicator to directories
+    (dired-listing-switches "-lAhp --group-directories-first")
+    (dired-dwim-target t)
+    :config
+    ;; Dired in single buffer (prevent dired from opening a lot of buffers)
+    (put 'dired-find-alternate-file 'disabled nil)
+    (defhydra hydra-dired (:hint nil :color pink)
+      "
+  ^Mark^                   ^Actions^         ^Control^                 ^Movement^       ^Search^
+  ^^^^^^^------------------------------------------------------------------------------------------------
+  _m_: mark                _+_: create dir   _(_: hide details         _p_: up dir      _S_: search files
+  _u_: unmark              _R_: rename       _g_: Refresh buffer       _n_: down dir    _I_: search content
+  _U_: unmark all          _C_: copy         _s_: toggle sort by date  _i_: view subdir _Q_: find and replace
+  _t_: toggle marks        _M_: chmod        _$_: summary              _$_: hide subdir ^ ^
+  _t_: mark using regexp   _Z_: compress     _<_: undo                 ^ ^              ^ ^
+  _/_: mark all dirs       _D_: delete       _v_: view                 ^ ^              ^ ^
+  ^ ^                      _=_: diff         _W_: open browser         ^ ^              ^ ^
+  "
+      ("m" dired-mark)
+      ("u" dired-unmark)
+      ("U" dired-unmark-all-marks)
+      ("t" dired-toggle-marks)
+      ("E" dired-mark-files-regexp)
+      ("/" dired-mark-directories)
+      ("+" dired-create-directory)
+      ("R" dired-do-rename)
+      ("C" dired-do-copy)
+      ("Z" dired-do-compress)
+      ("D" dired-do-delete)
+      ("M" dired-do-chmod)
+      ("=" dired-diff)
+      ("W" browse-url-of-dired-file)
+      ("(" dired-hide-details-mode)
+      ("g" revert-buffer)
+      ("s" dired-sort-toggle-or-edit)
+      ("?" dired-summary)
+      ("<" dired-undo)
+      ("v" dired-view-file)
+      ("p" dired-tree-up)
+      ("n" dired-tree-down)
+      ("i" dired-maybe-insert-subdir)
+      ("$" dired-hide-subdir)
+      ("S" dired-isearch-filenames)
+      ("I" dired-do-isearch)
+      ("Q" dired-do-find-regexp-and-replace)
+      ("q" quit-window "quit" :color blue)
+      ("." nil "toggle hydra" :color blue))
+    (define-key dired-mode-map "." 'hydra-dired/body))
 #+END_SRC
 *** Dired Icons
 Adds icons to dired mode
