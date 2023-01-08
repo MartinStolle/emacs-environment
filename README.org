@@ -202,54 +202,6 @@ Copied from Doom Emacs:
 (setq inhibit-startup-screen t)
 #+END_SRC
 
-** Custom Functions
-*** measure-time
-(Note: ":tangle early-init.el")
-#+BEGIN_SRC emacs-lisp :tangle early-init.el
-(defmacro fk/measure-time (&rest body)
-  "Measure the time it takes to evaluate BODY."
-  `(let ((time (current-time)))
-     ,@body
-     (message "%s" (float-time (time-since time)))))
-#+END_SRC
-
-*** time-since-startup
-(Note: ":tangle early-init.el")
-#+BEGIN_SRC emacs-lisp :tangle early-init.el
-(defun fk/time-since-startup (&optional prefix)
-  "Display the time that past since emacs startup. Add PREFIX if given at the
-start of message for debug purposes."
-  (interactive)
-  (let* ((prefix (or prefix ""))
-         (time (float-time (time-since before-init-time)))
-         (str (format "%s%s seconds" prefix time)))
-    (if (or (not (string-empty-p prefix))
-            (called-interactively-p 'interactive))
-        (message str)
-      str)))
-#+END_SRC
-
-*** time-since-last-check
-(Note: ":tangle early-init.el")
-#+BEGIN_SRC emacs-lisp :tangle early-init.el
-(defvar fk/time-last-check nil)
-(defvar fk/time-threshold 0)
-(setq fk/time-threshold 0.02)
-
-(defun fk/time-since-last-check (&optional prefix)
-  "Display the time that past since last check. Add PREFIX if given at the
-start of message for debug purposes."
-  (interactive)
-  (let* ((prefix (or prefix ""))
-         (time (float-time (time-since (or fk/time-last-check before-init-time))))
-         (str (format "%s%s seconds" prefix time)))
-    (setq fk/time-last-check (current-time))
-    (if (or (not (string-empty-p prefix))
-            (called-interactively-p 'interactive))
-        (when (> time fk/time-threshold) (message "%s" str))
-      str)))
-#+END_SRC
-
 * Better Defaults
 ** File Paths
 Keep Emacs directory clean.
@@ -437,7 +389,7 @@ Change default window dividers to a better built-in alternative.
 
 ** Font
 #+BEGIN_SRC emacs-lisp :tangle early-init.el
-(defconst fk/default-font-family "Consolas")
+(defconst fk/default-font-family "Ubuntu Mono")
 (defconst fk/default-font-size 90)
 (defconst fk/default-icon-size 15)
 
@@ -593,7 +545,6 @@ https://github.com/emacs-dashboard/emacs-dashboard
   (dashboard-startup-banner (fk/expand-static-file-name "GnuHead.png"))
   ;; Do not show package count, it is meaningless because of lazy loading.
   (dashboard-banner-logo-title "Welcome to Emacs!\n")
-  (dashboard-init-info (format "Emacs started in %s\n\n" (fk/time-since-startup)))
   (dashboard-set-heading-icons t)
   (dashboard-set-file-icons t)
   (dashboard-center-content t)
@@ -1092,61 +1043,63 @@ When in isearch use ~C-o~ to open the hydra.
 ** Company (Code & Text Completion)
 http://company-mode.github.io/
 #+BEGIN_SRC emacs-lisp
-(use-package company
-  :custom
-  (company-idle-delay 0)
-  (company-minimum-prefix-length 1)
-  (company-tooltip-align-annotations t)
-  (company-dabbrev-downcase nil)
-  (company-dabbrev-other-buffers t) ; search buffers with the same major mode
-  :bind
-  ( :map company-active-map
-    ("RET" . nil)
-    ([return] . nil)
-    ("C-w" . nil)
-    ("TAB" . company-complete-selection)
-    ("<tab>" . company-complete-selection)
-    ("C-s" . company-complete-selection)  ; Mostly to use during yasnippet expansion
-    ("C-n" . company-select-next)
-    ("C-p" . company-select-previous))
-  :hook
-  (dashboard-after-initialize . global-company-mode)
-  :config
-  (add-to-list 'company-begin-commands 'backward-delete-char-untabify)
+  (use-package company
+    :straight t
+    :after lsp-mode
+    :custom
+    (company-idle-delay 0)
+    (company-minimum-prefix-length 1)
+    (company-tooltip-align-annotations t)
+    (company-dabbrev-downcase nil)
+    (company-dabbrev-other-buffers t) ; search buffers with the same major mode
+    :bind
+    ( :map company-active-map
+      ("RET" . nil)
+      ([return] . nil)
+      ("C-w" . nil)
+      ("TAB" . company-complete-selection)
+      ("<tab>" . company-complete-selection)
+      ("C-s" . company-complete-selection)  ; Mostly to use during yasnippet expansion
+      ("C-n" . company-select-next)
+      ("C-p" . company-select-previous))
+    :hook
+    (dashboard-after-initialize . global-company-mode)
+    :config
+    (add-to-list 'company-begin-commands 'backward-delete-char-untabify)
 
-  ;; Show YASnippet snippets in company
+    ;; Show YASnippet snippets in company
 
-  (defun fk/company-backend-with-yas (backend)
-    "Add ':with company-yasnippet' to the given company backend."
-    (if (and (listp backend) (member 'company-yasnippet backend))
-        backend
-      (append (if (consp backend)
-                  backend
-                (list backend))
-              '(:with company-yasnippet))))
+    (defun fk/company-backend-with-yas (backend)
+      "Add ':with company-yasnippet' to the given company backend."
+      (if (and (listp backend) (member 'company-yasnippet backend))
+          backend
+        (append (if (consp backend)
+                    backend
+                  (list backend))
+                '(:with company-yasnippet))))
 
-  (defun fk/company-smart-snippets (fn command &optional arg &rest _)
-    "Do not show yasnippet candidates after dot."
-    ;;Source:
-    ;;https://www.reddit.com/r/emacs/comments/7dnbxl/how_to_temporally_filter_companymode_candidates/
-    (unless (when (and (equal command 'prefix) (> (point) 0))
-              (let* ((prefix (company-grab-symbol))
-                     (point-before-prefix (if (> (- (point) (length prefix) 1) 0)
-                                              (- (point) (length prefix) 1)
-                                            1))
-                     (char (buffer-substring-no-properties point-before-prefix (1+ point-before-prefix))))
-                (string= char ".")))
-      (funcall fn command arg)))
+    (defun fk/company-smart-snippets (fn command &optional arg &rest _)
+      "Do not show yasnippet candidates after dot."
+      ;;Source:
+      ;;https://www.reddit.com/r/emacs/comments/7dnbxl/how_to_temporally_filter_companymode_candidates/
+      (unless (when (and (equal command 'prefix) (> (point) 0))
+                (let* ((prefix (company-grab-symbol))
+                       (point-before-prefix (if (> (- (point) (length prefix) 1) 0)
+                                                (- (point) (length prefix) 1)
+                                              1))
+                       (char (buffer-substring-no-properties point-before-prefix (1+ point-before-prefix))))
+                  (string= char ".")))
+        (funcall fn command arg)))
 
-  ;; TODO: maybe show snippets at first?
-  (defun fk/company-enable-snippets ()
-    "Enable snippet suggestions in company by adding ':with
-company-yasnippet' to all company backends."
-    (interactive)
-    (setq company-backends (mapcar 'fk/company-backend-with-yas company-backends))
-    (advice-add 'company-yasnippet :around 'fk/company-smart-snippets))
+    ;; TODO: maybe show snippets at first?
+    (defun fk/company-enable-snippets ()
+      "Enable snippet suggestions in company by adding ':with
+  company-yasnippet' to all company backends."
+      (interactive)
+      (setq company-backends (mapcar 'fk/company-backend-with-yas company-backends))
+      (advice-add 'company-yasnippet :around 'fk/company-smart-snippets))
 
-  (fk/company-enable-snippets))
+    (fk/company-enable-snippets))
 #+END_SRC
 
 ** YASnippet (Snippet Completion)
@@ -1305,6 +1258,41 @@ See https://emacsrocks.com/e13.html for demo.
 #+END_SRC
 * Programming
 ** General
+** Language Server Protocol (LSP)
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-mode
+    :straight t
+    :commands (lsp lsp-deferred)
+    :init
+    (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+    :config
+    (setq lsp-headerline-breadcrumb-enable nil)
+    (lsp-enable-which-key-integration t)
+    :custom
+    ;; what to use when checking on-save. "check" is default, I prefer clippy
+    (lsp-rust-analyzer-cargo-watch-command "clippy")
+    (lsp-eldoc-render-all t)
+    (lsp-idle-delay 0.6)
+    ;; enable / disable the hints as you prefer:
+    (lsp-rust-analyzer-server-display-inlay-hints t)
+    (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+    (lsp-rust-analyzer-display-chaining-hints t)
+    (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+    (lsp-rust-analyzer-display-closure-return-type-hints t)
+    (lsp-rust-analyzer-display-parameter-hints nil)
+    (lsp-rust-analyzer-display-reborrow-hints nil)
+    )
+
+  (use-package lsp-ui
+    :straight t
+    :hook (lsp-mode . lsp-ui-mode)
+    :custom
+    (lsp-ui-doc-position 'bottom))
+
+  (use-package lsp-ivy
+    :straight t
+    :after lsp)
+#+END_SRC
 *** Electric Indent Mode
 #+BEGIN_SRC emacs-lisp
 (use-package electric
@@ -1398,6 +1386,49 @@ Install python packages with ~pip install -r requirements.txt~
     (with-eval-after-load 'exec-path-from-shell
       (exec-path-from-shell-copy-env "PYTHONPATH")))
 #+END_SRC
+
+** Rust
+Install rust, see https://www.rust-lang.org/tools/install and https://robert.kra.hn/posts/rust-emacs-setup/
+
+#+BEGIN_SRC bash :tangle no
+  $ git clone https://github.com/rust-analyzer/rust-analyzer.git
+  $ apt install build-essential
+  $ cd rust-analyzer
+  $ cargo xtask install --server # will install rust-analyzer into $HOME/.cargo/bin
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rustic
+    :straight t
+    :bind (:map rustic-mode-map
+		("M-j" . lsp-ui-imenu)
+		("M-?" . lsp-find-references)
+		("C-c C-c l" . flycheck-list-errors)
+		("C-c C-c a" . lsp-execute-code-action)
+		("C-c C-c r" . lsp-rename)
+		("C-c C-c q" . lsp-workspace-restart)
+		("C-c C-c Q" . lsp-workspace-shutdown)
+		("C-c C-c s" . lsp-rust-analyzer-status))
+    :config
+    ;; uncomment for less flashiness
+    ;; (setq lsp-eldoc-hook nil)
+    ;; (setq lsp-enable-symbol-highlighting nil)
+    ;; (setq lsp-signature-auto-activate nil)
+
+    ;; comment to disable rustfmt on save
+    (setq rustic-format-on-save t)
+    (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+
+  (defun rk/rustic-mode-hook ()
+    ;; so that run C-c C-c C-r works without having to confirm, but don't try to
+    ;; save rust buffers that are not file visiting. Once
+    ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
+    ;; no longer be necessary.
+    (when buffer-file-name
+      (setq-local buffer-save-without-query t))
+    (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+#+END_SRC
+
 ** Groovy
 https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes
 
@@ -1405,6 +1436,7 @@ https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes
 (use-package groovy-mode
   :mode "\\.groovy\\'")
 #+END_SRC
+
 ** Debugger
 Debug Adapter Protocol https://github.com/emacs-lsp/dap-mode
 Dap for Python requires dap mode also need ~pip install debugpy~
@@ -1598,14 +1630,6 @@ https://github.com/abo-abo/hydra/wiki/Ibuffer
   (define-key ibuffer-mode-map "." 'hydra-ibuffer-main/body))
 #+END_SRC
 ** Version Control
-*** Generating Information
-
-Setup emacs to use as default editor in git for Windows
-
-#+BEGIN_SRC bat
-git config --global core.editor "'c:\\Program Files\\Emacs\\bin\\emacsclientw.exe' --alternate-editor='c:/Program Files/Emacs/bin/runemacs.exe' -c"
-#+END_SRC
-
 *** Magit
 #+BEGIN_SRC emacs-lisp
 (use-package magit
